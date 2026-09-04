@@ -27,17 +27,20 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('Database connection error:', err));
 
-// Home route with Search functionality
+// Home route with Flexible Search functionality (Partial & single word match)
 app.get('/', async (req, res) => {
     try {
-        let searchQuery = req.query.search || '';
+        let searchQuery = req.query.search ? req.query.search.trim() : '';
         let query = {};
 
         if (searchQuery) {
+            // Flexible regex match for any single word or partial word
+            const searchRegex = new RegExp(searchQuery, 'i');
             query = {
                 $or: [
-                    { title: { $regex: searchQuery, $options: 'i' } },
-                    { brand: { $regex: searchQuery, $options: 'i' } }
+                    { title: searchRegex },
+                    { brand: searchRegex },
+                    { description: searchRegex }
                 ]
             };
         }
@@ -56,7 +59,7 @@ app.get('/product/:id', async (req, res) => {
         const product = await Product.findById(req.params.id);
         
         let averageRating = 0;
-        if (product.reviews.length > 0) {
+        if (product.reviews && product.reviews.length > 0) {
             let sum = product.reviews.reduce((acc, review) => acc + review.rating, 0);
             averageRating = (sum / product.reviews.length).toFixed(1);
         }
@@ -65,6 +68,30 @@ app.get('/product/:id', async (req, res) => {
     } catch (err) {
         console.error('Error fetching product details:', err);
         res.redirect('/');
+    }
+});
+
+// Handle Order Submission from Product Detail Page
+app.post('/order/:id', async (req, res) => {
+    try {
+        const { customerName, customerPhone, customerAddress } = req.body;
+        const productId = req.params.id;
+
+        // Create new order
+        const newOrder = new Order({
+            product: productId,
+            customerName,
+            phone: customerPhone,
+            location: customerAddress
+        });
+
+        await newOrder.save();
+        
+        // Redirect back or to a success message / homepage with alert style
+        res.redirect('/');
+    } catch (err) {
+        console.error('Error saving order:', err);
+        res.status(500).send('Server Error during order placement');
     }
 });
 
@@ -113,10 +140,10 @@ app.post('/admin/login', (req, res) => {
     }
 });
 
-// Admin Dashboard Route (GET)
+// Admin Dashboard Route (GET) - Now fetches orders with product details
 app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
     try {
-        const orders = await Order.find({}).sort({ createdAt: -1 });
+        const orders = await Order.find({}).populate('product').sort({ createdAt: -1 });
         res.render('admin/dashboard', { orders });
     } catch (err) {
         console.error(err);
