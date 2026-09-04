@@ -71,7 +71,7 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// Handle Order Submission from Product Detail Page
+// Handle Order Submission from Product Detail Page with Success Popup Alert
 app.post('/order/:id', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress } = req.body;
@@ -87,8 +87,13 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
-        // Redirect back or to a success message / homepage with alert style
-        res.redirect('/');
+        // Send success popup alert and redirect to home
+        res.send(`
+            <script>
+                alert('Order Submitted Successfully!');
+                window.location.href = '/';
+            </script>
+        `);
     } catch (err) {
         console.error('Error saving order:', err);
         res.status(500).send('Server Error during order placement');
