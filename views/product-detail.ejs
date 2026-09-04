@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.title %> - GkpKart</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .product-flex { display: flex; gap: 30px; flex-wrap: wrap; }
+        .product-img { max-width: 300px; width: 100%; height: auto; border-radius: 6px; object-fit: cover; }
+        .product-info { flex: 1; }
+        h1 { color: #333; font-size: 24px; margin-top: 0; }
+        .price { font-size: 22px; color: #b12704; font-weight: bold; margin: 10px 0; }
+        .brand { color: #555; font-size: 16px; margin-bottom: 10px; }
+        .rating-badge { background: #388e3c; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .whatsapp-btn { display: inline-block; background-color: #25d366; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 15px 0; text-align: center; width: 100%; box-sizing: border-box; }
+        .whatsapp-btn:hover { background-color: #1ebe57; }
+        .section-title { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #2874f0; }
+        .review-card { background: #f9f9f9; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e1e1e1; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 80px; }
+        button[type="submit"] { background-color: #2874f0; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+        button[type="submit"]:hover { background-color: #1b5ed8; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="/" style="text-decoration: none; color: #2874f0; font-weight: bold;">&larr; Back to Home</a>
+        
+        <div class="product-flex" style="margin-top: 20px;">
+            <img src="<%= product.image %>" alt="<%= product.title %>" class="product-img">
+            
+            <div class="product-info">
+                <h1><%= product.title %></h1>
+                <div class="brand">Brand: <strong><%= product.brand %></strong></div>
+                
+                <!-- Average Rating Display -->
+                <div>
+                    <span class="rating-badge">
+                        ★ <%= averageRating > 0 ? averageRating : 'No Rating' %> / 5
+                    </span>
+                    <span style="color: #666; font-size: 14px;">(<%= product.reviews.length %> Reviews)</span>
+                </div>
+
+                <div class="price">₹<%= product.price %></div>
+                <p><strong>Description:</strong> <%= product.description %></p>
+                <p style="color: #007600; font-size: 14px;"><strong>Policy:</strong> <%= product.returnPolicy %></p>
+
+                <!-- Direct WhatsApp Business Chat Button -->
+                <a href="https://wa.me/<%= product.whatsappNumber %>?text=Hello,%20I%20am%20interested%20in%20buying%20this%20product:%20<%= encodeURIComponent(product.title) %>" target="_blank" class="whatsapp-btn">
+                    💬 Chat on WhatsApp with Seller
+                </a>
+            </div>
+        </div>
+
+        <h3 class="section-title">Customer Reviews & Ratings</h3>
+
+        <!-- Existing Reviews List -->
+        <% if (product.reviews.length === 0) { %>
+            <p style="color: #666;">No reviews yet. Be the first one to review this product!</p>
+        <% } else { %>
+            <% product.reviews.forEach(review => { %>
+                <div class="review-card">
+                    <strong><%= review.user %></strong> 
+                    <span style="color: #f57c00; font-weight: bold; margin-left: 10px;">
+                        <% for(let i=0; i<review.rating; i++) { %>★<% } %>
+                    </span>
+                    <p style="margin: 5px 0 0 0; color: #444;"><%= review.comment %></p>
+                </div>
+            <% }) %>
+        <% } %>
+
+        <!-- Add Review Form -->
+        <h3 class="section-title">Leave a Review</h3>
+        <form action="/product/<%= product._id %>/reviews" method="POST">
+            <div class="form-group">
+                <label for="user">Your Name:</label>
+                <input type="text" id="user" name="user" required placeholder="Enter your name">
+            </div>
+
+            <div class="form-group">
+                <label for="rating">Rating (1 to 5 Stars):</label>
+                <select id="rating" name="rating" required>
+                    <option value="5">★★★★★ (5 Stars - Excellent)</option>
+                    <option value="4">★★★★☆ (4 Stars - Good)</option>
+                    <option value="3">★★★☆☆ (3 Stars - Average)</option>
+                    <option value="2">★★☆☆☆ (2 Stars - Poor)</option>
+                    <option value="1">★☆☆☆☆ (1 Star - Very Bad)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="comment">Your Review Comment:</label>
+                <textarea id="comment" name="comment" required placeholder="Write your experience with this product..."></textarea>
+            </div>
+
+            <button type="submit">Submit Review</button>
+        </form>
+    </div>
+
+</body>
+</html>

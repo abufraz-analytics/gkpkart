@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GkpKart - Admin Add Product</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2874f0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input[type="text"], input[type="number"], textarea, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { resize: vertical; height: 100px; }
+        button { background-color: #2874f0; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #1b5ed8; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>GkpKart Admin - Add New Product</h2>
+        <form action="/admin/add-product" method="POST" enctype="multipart/form-data">
+            
+            <div class="form-group">
+                <label for="title">Product Title (Mobile / Electronics):</label>
+                <input type="text" id="title" name="title" required placeholder="e.g. Samsung Galaxy M34">
+            </div>
+
+            <div class="form-group">
+                <label for="brand">Brand Name:</label>
+                <input type="text" id="brand" name="brand" required placeholder="e.g. Samsung, Apple, Redmi">
+            </div>
+
+            <div class="form-group">
+                <label for="price">Price (₹):</label>
+                <input type="number" id="price" name="price" required placeholder="e.g. 15999">
+            </div>
+
+            <div class="form-group">
+                <label for="whatsappNumber">WhatsApp Business Number (with country code):</label>
+                <input type="text" id="whatsappNumber" name="whatsappNumber" required placeholder="e.g. 919876543210">
+            </div>
+
+            <div class="form-group">
+                <label for="image">Product Image:</label>
+                <input type="file" id="image" name="image" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Product Description & Specs:</label>
+                <textarea id="description" name="description" required placeholder="Write RAM, ROM, Camera details..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="returnPolicy">Return Policy:</label>
+                <input type="text" id="returnPolicy" name="returnPolicy" value="7 Days Replacement Policy">
+            </div>
+
+            <button type="submit">Upload Product</button>
+        </form>
+    </div>
+
+</body>
+</html>
