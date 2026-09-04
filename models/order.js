@@ -18,14 +18,6 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true // Delivery location / address
     },
-    otp: {
-        type: String,
-        required: true
-    },
-    isVerified: {
-        type: Boolean,
-        default: false // OTP verify hone ke baad true hoga
-    },
     orderStatus: {
         type: String,
         default: 'Pending Confirmation'
