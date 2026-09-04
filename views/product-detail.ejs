@@ -14,16 +14,20 @@
         .price { font-size: 22px; color: #b12704; font-weight: bold; margin: 10px 0; }
         .brand { color: #555; font-size: 16px; margin-bottom: 10px; }
         .rating-badge { background: #388e3c; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
-        .whatsapp-btn { display: inline-block; background-color: #25d366; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 15px 0; text-align: center; width: 100%; box-sizing: border-box; }
+        .whatsapp-btn { display: inline-block; background-color: #25d366; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 15px 0 10px 0; text-align: center; width: 100%; box-sizing: border-box; }
         .whatsapp-btn:hover { background-color: #1ebe57; }
+        .order-box { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 15px; }
+        .order-box h3 { margin-top: 0; color: #2874f0; font-size: 18px; }
         .section-title { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #2874f0; }
         .review-card { background: #f9f9f9; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e1e1e1; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         textarea { height: 80px; }
         button[type="submit"] { background-color: #2874f0; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
         button[type="submit"]:hover { background-color: #1b5ed8; }
+        .order-submit-btn { background-color: #ff9f00; }
+        .order-submit-btn:hover { background-color: #fb8c00; }
     </style>
 </head>
 <body>
@@ -54,6 +58,30 @@
                 <a href="https://wa.me/<%= product.whatsappNumber %>?text=Hello,%20I%20am%20interested%20in%20buying%20this%20product:%20<%= encodeURIComponent(product.title) %>" target="_blank" class="whatsapp-btn">
                     💬 Chat on WhatsApp with Seller
                 </a>
+
+                <!-- Order Now Form Box -->
+                <div class="order-box">
+                    <h3>📦 Place Order Direct</h3>
+                    <form action="/order/<%= product._id %>" method="POST">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="customerName">Your Name:</label>
+                            <input type="text" id="customerName" name="customerName" required placeholder="Enter your full name">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="customerPhone">Mobile Number:</label>
+                            <input type="text" id="customerPhone" name="customerPhone" required placeholder="Enter mobile number">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="customerAddress">Area / Location / Address:</label>
+                            <input type="text" id="customerAddress" name="customerAddress" required placeholder="Enter area, city or address">
+                        </div>
+
+                        <button type="submit" class="order-submit-btn">Confirm Order Now</button>
+                    </form>
+                </div>
+
             </div>
         </div>
 
