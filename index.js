@@ -95,7 +95,7 @@ app.post('/order/:id', async (req, res) => {
             </script>
         `);
     } catch (err) {
-        console.error('Error saving order:', err);
+        console.error('Error saving order:', err.message);
         res.status(500).send('Server Error during order placement');
     }
 });
@@ -115,7 +115,7 @@ app.post('/product/:id/reviews', async (req, res) => {
         await product.save();
         res.redirect(`/product/${req.params.id}`);
     } catch (err) {
-        console.error('Error adding review:', err);
+        console.error('Error adding review:', err.message);
         res.status(500).send('Server Error');
     }
 });
@@ -151,7 +151,7 @@ app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
         const orders = await Order.find({}).populate('product').sort({ createdAt: -1 });
         res.render('admin/dashboard', { orders });
     } catch (err) {
-        console.error(err);
+        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
@@ -170,6 +170,11 @@ app.get('/admin/add-product', (req, res) => {
 // Add Product Processing (POST)
 app.post('/admin/add-product', upload.single('image'), async (req, res) => {
     try {
+        // Check if image file is uploaded properly
+        if (!req.file) {
+            return res.status(400).send('Bad Request: Image upload failed or no image provided.');
+        }
+
         const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
         
         const newProduct = new Product({
@@ -185,8 +190,8 @@ app.post('/admin/add-product', upload.single('image'), async (req, res) => {
         await newProduct.save();
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error adding product:', err);
-        res.status(500).send('Server Error during product upload');
+        console.error('Error adding product:', err.message); // Prints exact error message instead of [object Object]
+        res.status(500).send(`Server Error during product upload: ${err.message}`);
     }
 });
 
