@@ -15,13 +15,17 @@
         button { background-color: #2874f0; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
         button:hover { background-color: #1b5ed8; }
         .note { font-size: 12px; color: #666; margin-top: 3px; }
+        .back-link { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #2874f0; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <a href="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
         <h2>GkpKart Admin - Add New Product</h2>
-        <form action="/admin/add-product" method="POST" enctype="multipart/form-data">
+        
+        <!-- Form with submit handler to prevent double clicking and show status -->
+        <form id="addProductForm" action="/admin/add-product" method="POST" enctype="multipart/form-data">
             
             <div class="form-group">
                 <label for="title">Product Title (Mobile / Electronics):</label>
@@ -54,7 +58,7 @@
             <div class="form-group">
                 <label for="videos">Product Videos (Optional):</label>
                 <input type="file" id="videos" name="videos" accept="video/*" multiple>
-                <div class="note">Agar product ka video hai toh yahan select karein.</div>
+                <div class="note">Agar product ka video hai toh yahan select karein (Avoid very large video files on mobile data).</div>
             </div>
 
             <div class="form-group">
@@ -67,9 +71,21 @@
                 <input type="text" id="returnPolicy" name="returnPolicy" value="7 Days Replacement Policy">
             </div>
 
-            <button type="submit">Upload Product</button>
+            <button type="submit" id="submitBtn">Upload Product</button>
         </form>
     </div>
+
+    <script>
+        // Mobile par upload ke waqt user ko pata chalne ke liye script
+        const form = document.getElementById('addProductForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.style.backgroundColor = '#999';
+            submitBtn.innerText = 'Uploading, Please Wait...';
+        });
+    </script>
 
 </body>
 </html>
