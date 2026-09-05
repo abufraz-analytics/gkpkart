@@ -13,15 +13,13 @@
         .search-form input { flex: 1; padding: 8px 12px; border: none; border-radius: 4px; font-size: 14px; }
         .search-form button { background-color: #ff9f00; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .search-form button:hover { background-color: #fb641b; }
-        .admin-link { background-color: #ff9f00; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; white-space: nowrap; }
-        .admin-link:hover { background-color: #fb641b; }
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
         .banner { background: linear-gradient(135deg, #2874f0, #174ea6); color: white; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .product-card { background: white; border: 1px solid #e1e1e1; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
         .product-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 4px; }
         .product-title { font-size: 16px; font-weight: bold; color: #333; margin: 10px 0 5px 0; }
-        .product-brand { color: #666; font-size: 14,px; margin-bottom: 5px; }
+        .product-brand { color: #666; font-size: 14px; margin-bottom: 5px; }
         .product-price { font-size: 18px; color: #b12704; font-weight: bold; margin-bottom: 10px; }
         .details-btn { display: block; text-align: center; background-color: #ff9f00; color: white; padding: 10px; text-decoration: none; border-radius: 4px; font-weight: bold; }
         .details-btn:hover { background-color: #fb641b; }
@@ -70,7 +68,19 @@
                 <% products.forEach(product => { %>
                     <div class="product-card">
                         <div>
-                            <img src="<%= product.image %>" alt="<%= product.title %>">
+                            <!-- Fixed Image Path check for both multiple array images and single image -->
+                            <% 
+                                let displayImg = '';
+                                if (product.images && product.images.length > 0) {
+                                    displayImg = product.images[0];
+                                } else if (product.image) {
+                                    displayImg = product.image;
+                                } else {
+                                    displayImg = 'https://via.placeholder.com/200';
+                                }
+                            %>
+                            <img src="<%= displayImg %>" alt="<%= product.title %>">
+
                             <div class="product-title"><%= product.title %></div>
                             <div class="product-brand">Brand: <%= product.brand %></div>
                             <div class="product-price">₹<%= product.price %></div>
