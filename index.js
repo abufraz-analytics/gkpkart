@@ -56,9 +56,6 @@ app.get('/', async (req, res) => {
 app.get('/product/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) {
-            return res.redirect('/');
-        }
         
         let averageRating = 0;
         if (product.reviews && product.reviews.length > 0) {
@@ -186,7 +183,7 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
         const newProduct = new Product({
             title,
             brand,
-            price: price ? Number(price) : 0,
+            price,
             description,
             images: imagePaths,
             videos: videoPaths,
@@ -197,14 +194,14 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
         await newProduct.save();
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error adding product:', err);
+        console.error('Error adding product:', err.message);
         res.status(500).send(`Server Error during product upload: ${err.message}`);
     }
 });
 
 // --- ADMIN EDIT & DELETE ROUTES ---
 
-// 1. Delete Product Route
+// 1. Delete Product Route (Changed from GET to POST)
 app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
@@ -229,25 +226,21 @@ app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// 3. Edit Product Route (POST Update) - Safe & Robust Version
+// 3. Edit Product Route (POST Update)
 app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
     { name: 'images', maxCount: 10 },
     { name: 'videos', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
-        
+        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.browser || req.body;
         const updateData = {
             title,
             brand,
+            price,
             description,
             whatsappNumber,
             returnPolicy
         };
-
-        if (price) {
-            updateData.price = Number(price);
-        }
 
         // If new images are uploaded, update the images array
         if (req.files && req.files.images && req.files.images.length > 0) {
@@ -262,7 +255,7 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
         await Product.findByIdAndUpdate(req.params.id, updateData);
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error updating product:', err);
+        console.error('Error updating product:', err.message);
         res.status(500).send(`Server Error during product update: ${err.message}`);
     }
 });
