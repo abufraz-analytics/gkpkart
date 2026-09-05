@@ -201,8 +201,8 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
 
 // --- ADMIN EDIT & DELETE ROUTES ---
 
-// 1. Delete Product Route
-app.get('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
+// 1. Delete Product Route (Changed from GET to POST)
+app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
         res.redirect('/admin/dashboard');
@@ -232,7 +232,7 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
     { name: 'videos', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
+        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.browser || req.body;
         const updateData = {
             title,
             brand,
@@ -256,7 +256,7 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
         res.redirect('/admin/dashboard');
     } catch (err) {
         console.error('Error updating product:', err.message);
-        res.status(500).send('Server Error during product update');
+        res.status(500).send(`Server Error during product update: ${err.message}`);
     }
 });
 
