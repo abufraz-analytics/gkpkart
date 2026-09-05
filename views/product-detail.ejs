@@ -6,9 +6,35 @@
     <title><%= product.title %> - GkpKart</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .product-flex { display: flex; gap: 30px; flex-wrap: wrap; }
-        .product-img { max-width: 300px; width: 100%; height: auto; border-radius: 6px; object-fit: cover; }
+        
+        /* Gallery Styling */
+        .gallery-container { display: flex; gap: 15px; max-width: 450px; width: 100%; }
+        .thumbnails-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; width: 80px; }
+        .thumb-item { width: 70px; height: 70px; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: cover; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .thumb-item.active { border-color: #2874f0; }
+        .thumb-item img, .thumb-item video { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+        
+        .main-preview-box { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #ddd; border-radius: 6px; height: 400px; overflow: hidden; cursor: zoom-in; }
+        .main-preview-box img, .main-preview-box video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        
+        /* Slider Navigation Arrows on Main Image */
+        .slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 5; }
+        .slider-arrow:hover { background: #fff; }
+        .prev-arrow { left: 10px; }
+        .next-arrow { right: 10px; }
+
+        /* Fullscreen Lightbox Modal */
+        #lightbox-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; overflow: hidden; }
+        #lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; transform-origin: center center; transition: transform 0.1s ease-out; cursor: grab; }
+        #lightbox-content img, #lightbox-content video { max-width: 90vw; max-height: 90vh; object-fit: contain; display: block; }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; z-index: 1010; background: rgba(0,0,0,0.5); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .lightbox-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; font-size: 30px; padding: 15px; cursor: pointer; z-index: 1010; border-radius: 4px; }
+        .lightbox-arrow:hover { background: rgba(255,255,255,0.6); }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+
         .product-info { flex: 1; }
         h1 { color: #333; font-size: 24px; margin-top: 0; }
         .price { font-size: 22px; color: #b12704; font-weight: bold; margin: 10px 0; }
@@ -36,13 +62,54 @@
         <a href="/" style="text-decoration: none; color: #2874f0; font-weight: bold;">&larr; Back to Home</a>
         
         <div class="product-flex" style="margin-top: 20px;">
-            <img src="<%= product.image %>" alt="<%= product.title %>" class="product-img">
+            
+            <!-- Media Gallery Section -->
+            <div class="gallery-container">
+                <!-- Left Side Thumbnails -->
+                <div class="thumbnails-list">
+                    <% 
+                        let allMedia = [];
+                        if (product.images && product.images.length > 0) {
+                            product.images.forEach(img => allMedia.push({ type: 'image', url: img }));
+                        }
+                        if (product.videos && product.videos.length > 0) {
+                            product.videos.forEach(vid => allMedia.push({ type: 'video', url: vid }));
+                        }
+                    %>
+
+                    <% allMedia.forEach((media, index) => { %>
+                        <div class="thumb-item <%= index === 0 ? 'active' : '' %>" onclick="changeMedia('<%= media.url %>', '<%= media.type %>', <%= index %>)">
+                            <% if (media.type === 'image') { %>
+                                <img src="<%= media.url %>" alt="Thumbnail">
+                            <% } else { %>
+                                <video src="<%= media.url %>"></video>
+                                <div style="position: absolute; color: white; font-size: 12px; background: rgba(0,0,0,0.6); padding: 2px 4px; border-radius: 2px;">▶</div>
+                            <% } %>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <!-- Right Side Main Preview -->
+                <div class="main-preview-box" id="mainPreviewBox" onclick="openLightbox()">
+                    <button class="slider-arrow prev-arrow" onclick="event.stopPropagation(); slideMedia(-1)">&#10094;</button>
+                    <button class="slider-arrow next-arrow" onclick="event.stopPropagation(); slideMedia(1)">&#10095;</button>
+                    
+                    <div id="mainDisplayArea" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                        <% if (allMedia.length > 0) { %>
+                            <% if (allMedia[0].type === 'image') { %>
+                                <img id="activeMainImg" src="<%= allMedia[0].url %>" alt="<%= product.title %>">
+                            <% } else { %>
+                                <video id="activeMainVid" src="<%= allMedia[0].url %>" controls autoplay muted style="max-width:100%; max-height:100%;"></video>
+                            <% } %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
             
             <div class="product-info">
                 <h1><%= product.title %></h1>
                 <div class="brand">Brand: <strong><%= product.brand %></strong></div>
                 
-                <!-- Average Rating Display -->
                 <div>
                     <span class="rating-badge">
                         ★ <%= averageRating > 0 ? averageRating : 'No Rating' %> / 5
@@ -87,7 +154,6 @@
 
         <h3 class="section-title">Customer Reviews & Ratings</h3>
 
-        <!-- Existing Reviews List -->
         <% if (product.reviews.length === 0) { %>
             <p style="color: #666;">No reviews yet. Be the first one to review this product!</p>
         <% } else { %>
@@ -102,7 +168,6 @@
             <% }) %>
         <% } %>
 
-        <!-- Add Review Form -->
         <h3 class="section-title">Leave a Review</h3>
         <form action="/product/<%= product._id %>/reviews" method="POST">
             <div class="form-group">
@@ -130,5 +195,104 @@
         </form>
     </div>
 
+    <!-- Fullscreen Lightbox Modal -->
+    <div id="lightbox-modal">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <button class="lightbox-arrow lightbox-prev" onclick="slideLightbox(-1)">&#10094;</button>
+        <button class="lightbox-arrow lightbox-next" onclick="slideLightbox(1)">&#10095;</button>
+        <div id="lightbox-content">
+            <!-- Dynamic Lightbox Media -->
+        </div>
+    </div>
+
+    <!-- Gallery & Zoom JavaScript -->
+    <script>
+        const mediaList = <%- JSON.stringify(allMedia) %>;
+        let currentIndex = 0;
+        let scale = 1;
+        let panX = 0;
+        let panY = 0;
+
+        function changeMedia(url, type, index) {
+            currentIndex = index;
+            const displayArea = document.getElementById('mainDisplayArea');
+            if (type === 'image') {
+                displayArea.innerHTML = `<img src="${url}" alt="Product Preview">`;
+            } else {
+                displayArea.innerHTML = `<video src="${url}" controls autoplay muted style="max-width:100%; max-height:100%;"></video>`;
+            }
+
+            // Update active thumbnail border
+            document.querySelectorAll('.thumb-item').forEach((item, idx) => {
+                if (idx === index) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function slideMedia(direction) {
+            if (mediaList.length === 0) return;
+            currentIndex = (currentIndex + direction + mediaList.length) % mediaList.length;
+            const media = mediaList[currentIndex];
+            changeMedia(media.url, media.type, currentIndex);
+        }
+
+        // Fullscreen Lightbox Functions
+        function openLightbox() {
+            if (mediaList.length === 0) return;
+            const modal = document.getElementById('lightbox-modal');
+            modal.style.display = 'flex';
+            scale = 1;
+            panX = 0;
+            panY = 0;
+            updateLightboxContent();
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox-modal').style.display = 'none';
+        }
+
+        function slideLightbox(direction) {
+            if (mediaList.length === 0) return;
+            currentIndex = (currentIndex + direction + mediaList.length) % mediaList.length;
+            scale = 1;
+            panX = 0;
+            panY = 0;
+            updateLightboxContent();
+        }
+
+        function updateLightboxContent() {
+            const contentBox = document.getElementById('lightbox-content');
+            const media = mediaList[currentIndex];
+            if (media.type === 'image') {
+                contentBox.innerHTML = `<img id="lightboxImg" src="${media.url}" style="transform: scale(${scale}) translate(${panX}px, ${panY}px);">`;
+            } else {
+                contentBox.innerHTML = `<video src="${media.url}" controls autoplay style="max-width:90vw; max-height:90vh;"></video>`;
+            }
+        }
+
+        // Mouse Wheel Zoom on Cursor in Lightbox
+        const lightboxModal = document.getElementById('lightbox-modal');
+        lightboxModal.addEventListener('wheel', function(e) {
+            const media = mediaList[currentIndex];
+            if (media.type !== 'image') return; // Zoom only for images
+            
+            e.preventDefault();
+            const zoomIntensity = 0.1;
+            if (e.deltaY < 0) {
+                scale += zoomIntensity; // Zoom In
+            } else {
+                scale = Math.max(1, scale - zoomIntensity); // Zoom Out
+            }
+
+            const contentBox = document.getElementById('lightbox-content');
+            const imgEl = contentBox.querySelector('img');
+            if (imgEl) {
+                imgEl.style.transform = `scale(${scale})`;
+            }
+        });
+    </script>
 </body>
 </html>
