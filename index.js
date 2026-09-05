@@ -56,6 +56,9 @@ app.get('/', async (req, res) => {
 app.get('/product/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.redirect('/');
+        }
         
         let averageRating = 0;
         if (product.reviews && product.reviews.length > 0) {
@@ -183,7 +186,7 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
         const newProduct = new Product({
             title,
             brand,
-            price,
+            price: price ? Number(price) : 0,
             description,
             images: imagePaths,
             videos: videoPaths,
@@ -194,14 +197,14 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
         await newProduct.save();
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error adding product:', err.message);
+        console.error('Error adding product:', err);
         res.status(500).send(`Server Error during product upload: ${err.message}`);
     }
 });
 
 // --- ADMIN EDIT & DELETE ROUTES ---
 
-// 1. Delete Product Route (Changed from GET to POST)
+// 1. Delete Product Route
 app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
@@ -226,7 +229,7 @@ app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// 3. Edit Product Route (POST Update)
+// 3. Edit Product Route (POST Update) - Safe & Robust Version
 app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
     { name: 'images', maxCount: 10 },
     { name: 'videos', maxCount: 5 }
@@ -237,11 +240,14 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
         const updateData = {
             title,
             brand,
-            price: Number(price),
             description,
             whatsappNumber,
             returnPolicy
         };
+
+        if (price) {
+            updateData.price = Number(price);
+        }
 
         // If new images are uploaded, update the images array
         if (req.files && req.files.images && req.files.images.length > 0) {
@@ -253,10 +259,10 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
             updateData.videos = req.files.videos.map(file => file.path);
         }
 
-        await Product.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
+        await Product.findByIdAndUpdate(req.params.id, updateData);
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error updating product:', err.message);
+        console.error('Error updating product:', err);
         res.status(500).send(`Server Error during product update: ${err.message}`);
     }
 });
