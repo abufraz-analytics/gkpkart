@@ -17,10 +17,18 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    image: {
-        type: String,
-        required: true
-    },
+    // Multiple images aur videos ke liye arrays
+    images: [
+        {
+            type: String,
+            required: true
+        }
+    ],
+    videos: [
+        {
+            type: String
+        }
+    ],
     whatsappNumber: {
         type: String,
         required: true
