@@ -232,11 +232,12 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
     { name: 'videos', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.browser || req.body;
+        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
+        
         const updateData = {
             title,
             brand,
-            price,
+            price: Number(price),
             description,
             whatsappNumber,
             returnPolicy
@@ -252,7 +253,7 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
             updateData.videos = req.files.videos.map(file => file.path);
         }
 
-        await Product.findByIdAndUpdate(req.params.id, updateData);
+        await Product.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
         res.redirect('/admin/dashboard');
     } catch (err) {
         console.error('Error updating product:', err.message);
