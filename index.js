@@ -34,7 +34,6 @@ app.get('/', async (req, res) => {
         let query = {};
 
         if (searchQuery) {
-            // Flexible regex match for any single word or partial word
             const searchRegex = new RegExp(searchQuery, 'i');
             query = {
                 $or: [
@@ -77,7 +76,6 @@ app.post('/order/:id', async (req, res) => {
         const { customerName, customerPhone, customerAddress } = req.body;
         const productId = req.params.id;
 
-        // Create new order
         const newOrder = new Order({
             product: productId,
             customerName,
@@ -87,7 +85,6 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
-        // Send success popup alert and redirect to home
         res.send(`
             <script>
                 alert('Order Submitted Successfully!');
@@ -145,11 +142,12 @@ app.post('/admin/login', (req, res) => {
     }
 });
 
-// Admin Dashboard Route (GET) - Now fetches orders with product details
+// Admin Dashboard Route (GET) - Fetches orders and products for management
 app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
     try {
         const orders = await Order.find({}).populate('product').sort({ createdAt: -1 });
-        res.render('admin/dashboard', { orders });
+        const products = await Product.find({}).sort({ createdAt: -1 });
+        res.render('admin/dashboard', { orders, products });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -167,13 +165,18 @@ app.get('/admin/add-product', (req, res) => {
     res.redirect('/admin/dashboard');
 });
 
-// Add Product Processing (POST)
-app.post('/admin/add-product', upload.single('image'), async (req, res) => {
+// Add Product Processing (POST) with Multiple Images & Videos Support
+app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
+    { name: 'images', maxCount: 10 },
+    { name: 'videos', maxCount: 5 }
+]), async (req, res) => {
     try {
-        // Check if image file is uploaded properly
-        if (!req.file) {
-            return res.status(400).send('Bad Request: Image upload failed or no image provided.');
+        if (!req.files || !req.files.images || req.files.images.length === 0) {
+            return res.status(400).send('Bad Request: At least one product image is required.');
         }
+
+        const imagePaths = req.files.images.map(file => file.path);
+        const videoPaths = req.files.videos ? req.files.videos.map(file => file.path) : [];
 
         const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
         
@@ -182,7 +185,8 @@ app.post('/admin/add-product', upload.single('image'), async (req, res) => {
             brand,
             price,
             description,
-            image: req.file.path, 
+            images: imagePaths,
+            videos: videoPaths,
             whatsappNumber,
             returnPolicy: returnPolicy || "7 Days Replacement Policy"
         });
@@ -190,8 +194,69 @@ app.post('/admin/add-product', upload.single('image'), async (req, res) => {
         await newProduct.save();
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error adding product:', err.message); // Prints exact error message instead of [object Object]
+        console.error('Error adding product:', err.message);
         res.status(500).send(`Server Error during product upload: ${err.message}`);
+    }
+});
+
+// --- ADMIN EDIT & DELETE ROUTES ---
+
+// 1. Delete Product Route
+app.get('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
+    try {
+        await Product.findByIdAndDelete(req.params.id);
+        res.redirect('/admin/dashboard');
+    } catch (err) {
+        console.error('Error deleting product:', err.message);
+        res.status(500).send('Server Error during product deletion');
+    }
+});
+
+// 2. Edit Product Route (GET Form)
+app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.redirect('/admin/dashboard');
+        }
+        res.render('admin/edit-product', { product });
+    } catch (err) {
+        console.error('Error fetching product for edit:', err.message);
+        res.redirect('/admin/dashboard');
+    }
+});
+
+// 3. Edit Product Route (POST Update)
+app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
+    { name: 'images', maxCount: 10 },
+    { name: 'videos', maxCount: 5 }
+]), async (req, res) => {
+    try {
+        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
+        const updateData = {
+            title,
+            brand,
+            price,
+            description,
+            whatsappNumber,
+            returnPolicy
+        };
+
+        // If new images are uploaded, update the images array
+        if (req.files && req.files.images && req.files.images.length > 0) {
+            updateData.images = req.files.images.map(file => file.path);
+        }
+
+        // If new videos are uploaded, update the videos array
+        if (req.files && req.files.videos && req.files.videos.length > 0) {
+            updateData.videos = req.files.videos.map(file => file.path);
+        }
+
+        await Product.findByIdAndUpdate(req.params.id, updateData);
+        res.redirect('/admin/dashboard');
+    } catch (err) {
+        console.error('Error updating product:', err.message);
+        res.status(500).send('Server Error during product update');
     }
 });
 
