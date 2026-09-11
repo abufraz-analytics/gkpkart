@@ -18,9 +18,31 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true // Delivery location / address
     },
+    // Order status fields for the 5-stage lifecycle
     orderStatus: {
         type: String,
-        default: 'Pending Confirmation'
+        enum: ['New', 'Packed', 'Out For Delivery', 'Delivered', 'Canceled'],
+        default: 'New'
+    },
+    // Category field to match product category for admin management
+    category: {
+        type: String,
+        required: true
+    },
+    // Assigned Delivery Boy ID (from Render environment variables)
+    deliveryBoyId: {
+        type: String,
+        default: ''
+    },
+    // Secret key for delivery verification
+    secretKey: {
+        type: String,
+        required: true
+    },
+    // Reason if the order is canceled
+    cancelReason: {
+        type: String,
+        default: ''
     },
     createdAt: {
         type: Date,
