@@ -17,6 +17,18 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    // Category field added for 5 categories
+    category: {
+        type: String,
+        required: true,
+        enum: [
+            'Shoes', 
+            'Mobile Accessories', 
+            'Small Electric Item', 
+            'Big Electric Item', 
+            'Ladies & Gents Makeup Items'
+        ]
+    },
     // Multiple images aur videos ke liye arrays
     images: [
         {
