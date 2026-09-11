@@ -5,65 +5,453 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= product.title %> - GkpKart</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .product-flex { display: flex; gap: 30px; flex-wrap: wrap; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --whatsapp: #25d366;
+            --whatsapp-hover: #1ebe57;
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+        }
+
+        .product-flex {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
         
         /* Gallery Styling */
-        .gallery-container { display: flex; gap: 15px; max-width: 450px; width: 100%; }
-        .thumbnails-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; width: 80px; }
-        .thumb-item { width: 70px; height: 70px; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: cover; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
-        .thumb-item.active { border-color: #2874f0; }
-        .thumb-item img, .thumb-item video { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+        .gallery-container {
+            display: flex;
+            gap: 16px;
+            max-width: 550px;
+            width: 100%;
+        }
+
+        .thumbnails-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 480px;
+            overflow-y: auto;
+            width: 85px;
+            padding-right: 4px;
+        }
+
+        .thumbnails-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .thumbnails-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .thumb-item {
+            width: 75px;
+            height: 75px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            object-fit: cover;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .thumb-item:hover {
+            border-color: var(--primary);
+        }
+
+        .thumb-item.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .thumb-item img, .thumb-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
         
-        .main-preview-box { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #ddd; border-radius: 6px; height: 400px; overflow: hidden; cursor: zoom-in; }
-        .main-preview-box img, .main-preview-box video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        /* Main Preview Box - Made larger and crystal clear */
+        .main-preview-box {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            height: 480px;
+            overflow: hidden;
+            cursor: zoom-in;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            touch-action: pan-y;
+        }
+
+        .main-preview-box img, .main-preview-box video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            user-select: none;
+            transition: transform 0.3s ease;
+        }
         
         /* Slider Navigation Arrows on Main Image */
-        .slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 5; }
-        .slider-arrow:hover { background: #fff; }
-        .prev-arrow { left: 10px; }
-        .next-arrow { right: 10px; }
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+            transition: all 0.2s;
+        }
+
+        .slider-arrow:hover {
+            background: #fff;
+            color: var(--primary);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .prev-arrow { left: 12px; }
+        .next-arrow { right: 12px; }
 
         /* Fullscreen Lightbox Modal */
-        #lightbox-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; overflow: hidden; }
-        #lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; transform-origin: center center; transition: transform 0.1s ease-out; cursor: grab; }
-        #lightbox-content img, #lightbox-content video { max-width: 90vw; max-height: 90vh; object-fit: contain; display: block; }
-        .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; z-index: 1010; background: rgba(0,0,0,0.5); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .lightbox-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; font-size: 30px; padding: 15px; cursor: pointer; z-index: 1010; border-radius: 4px; }
-        .lightbox-arrow:hover { background: rgba(255,255,255,0.6); }
-        .lightbox-prev { left: 20px; }
-        .lightbox-next { right: 20px; }
+        #lightbox-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
 
-        .product-info { flex: 1; }
-        h1 { color: #333; font-size: 24px; margin-top: 0; }
-        .price { font-size: 22px; color: #b12704; font-weight: bold; margin: 10px 0; }
-        .brand { color: #555; font-size: 16px; margin-bottom: 10px; }
-        .rating-badge { background: #388e3c; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
-        .whatsapp-btn { display: inline-block; background-color: #25d366; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 15px 0 10px 0; text-align: center; width: 100%; box-sizing: border-box; }
-        .whatsapp-btn:hover { background-color: #1ebe57; }
-        .order-box { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 15px; }
-        .order-box h3 { margin-top: 0; color: #2874f0; font-size: 18px; }
-        .section-title { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #2874f0; }
-        .review-card { background: #f9f9f9; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e1e1e1; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        textarea { height: 80px; }
-        button[type="submit"] { background-color: #2874f0; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
-        button[type="submit"]:hover { background-color: #1b5ed8; }
-        .order-submit-btn { background-color: #ff9f00; }
-        .order-submit-btn:hover { background-color: #fb8c00; }
+        #lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #lightbox-content img, #lightbox-content video {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1010;
+            background: rgba(255, 255, 255, 0.1);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .lightbox-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            z-index: 1010;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .lightbox-arrow:hover { background: rgba(255, 255, 255, 0.4); }
+        .lightbox-prev { left: 24px; }
+        .lightbox-next { right: 24px; }
+
+        .product-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: var(--text-main);
+            font-size: 28px;
+            margin-top: 0;
+            font-weight: 700;
+        }
+
+        .brand {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .rating-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .rating-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .price {
+            font-size: 26px;
+            color: #e11d48;
+            font-weight: 800;
+            margin: 10px 0 16px 0;
+        }
+
+        .description-box {
+            color: #475569;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .policy-box {
+            color: #059669;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .whatsapp-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: var(--whatsapp);
+            color: white;
+            padding: 14px 20px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+        }
+
+        .whatsapp-btn:hover {
+            background-color: var(--whatsapp-hover);
+            transform: translateY(-1px);
+        }
+
+        .order-box {
+            background: #f8fafc;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .order-box h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            margin-top: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .review-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background: #fff;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea { height: 90px; resize: vertical; }
+
+        button[type="submit"] {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 15px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .order-submit-btn {
+            background-color: var(--accent) !important;
+            color: #111827 !important;
+        }
+
+        .order-submit-btn:hover {
+            background-color: #d97706 !important;
+            color: white !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 16px; }
+            .product-flex { flex-direction: column; gap: 20px; }
+            .gallery-container { flex-direction: column-reverse; max-width: 100%; }
+            .thumbnails-list {
+                flex-direction: row;
+                width: 100%;
+                max-height: none;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+            .thumb-item { width: 65px; height: 65px; }
+            .main-preview-box { height: 320px; }
+            h1 { font-size: 22px; }
+            .price { font-size: 22px; }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <a href="/" style="text-decoration: none; color: #2874f0; font-weight: bold;">&larr; Back to Home</a>
+        <a href="/" class="back-link">&larr; Back to Home</a>
         
-        <div class="product-flex" style="margin-top: 20px;">
+        <div class="product-flex">
             
-            <!-- Media Gallery Section -->
+            <!-- Media Gallery Section with Swipe/Slide Support -->
             <div class="gallery-container">
                 <!-- Left Side Thumbnails -->
                 <div class="thumbnails-list">
@@ -83,7 +471,7 @@
                                 <img src="<%= media.url %>" alt="Thumbnail">
                             <% } else { %>
                                 <video src="<%= media.url %>"></video>
-                                <div style="position: absolute; color: white; font-size: 12px; background: rgba(0,0,0,0.6); padding: 2px 4px; border-radius: 2px;">▶</div>
+                                <div style="position: absolute; color: white; font-size: 12px; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 4px;">▶</div>
                             <% } %>
                         </div>
                     <% }) %>
@@ -106,20 +494,21 @@
                 </div>
             </div>
             
+            <!-- Product Information -->
             <div class="product-info">
                 <h1><%= product.title %></h1>
                 <div class="brand">Brand: <strong><%= product.brand %></strong></div>
                 
-                <div>
+                <div class="rating-wrapper">
                     <span class="rating-badge">
                         ★ <%= averageRating > 0 ? averageRating : 'No Rating' %> / 5
                     </span>
-                    <span style="color: #666; font-size: 14px;">(<%= product.reviews.length %> Reviews)</span>
+                    <span style="color: var(--text-muted); font-size: 14px;">(<%= product.reviews.length %> Reviews)</span>
                 </div>
 
                 <div class="price">₹<%= product.price %></div>
-                <p><strong>Description:</strong> <%= product.description %></p>
-                <p style="color: #007600; font-size: 14px;"><strong>Policy:</strong> <%= product.returnPolicy %></p>
+                <div class="description-box"><strong>Description:</strong> <%= product.description %></div>
+                <div class="policy-box"><strong>Policy:</strong> <%= product.returnPolicy %></div>
 
                 <!-- Direct WhatsApp Business Chat Button -->
                 <a href="https://wa.me/<%= product.whatsappNumber %>?text=Hello,%20I%20am%20interested%20in%20buying%20this%20product:%20<%= encodeURIComponent(product.title) %>" target="_blank" class="whatsapp-btn">
@@ -128,19 +517,19 @@
 
                 <!-- Order Now Form Box -->
                 <div class="order-box">
-                    <h3>📦 Place Order Direct</h3>
+                    <h3>📦 Place Order Directly</h3>
                     <form action="/order/<%= product._id %>" method="POST">
-                        <div class="form-group" style="margin-bottom: 10px;">
+                        <div class="form-group">
                             <label for="customerName">Your Name:</label>
                             <input type="text" id="customerName" name="customerName" required placeholder="Enter your full name">
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 10px;">
+                        <div class="form-group">
                             <label for="customerPhone">Mobile Number:</label>
                             <input type="text" id="customerPhone" name="customerPhone" required placeholder="Enter mobile number">
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 12px;">
+                        <div class="form-group">
                             <label for="customerAddress">Area / Location / Address:</label>
                             <input type="text" id="customerAddress" name="customerAddress" required placeholder="Enter area, city or address">
                         </div>
@@ -155,21 +544,21 @@
         <h3 class="section-title">Customer Reviews & Ratings</h3>
 
         <% if (product.reviews.length === 0) { %>
-            <p style="color: #666;">No reviews yet. Be the first one to review this product!</p>
+            <p style="color: var(--text-muted); padding: 10px 0;">No reviews yet. Be the first one to review this product!</p>
         <% } else { %>
             <% product.reviews.forEach(review => { %>
                 <div class="review-card">
                     <strong><%= review.user %></strong> 
-                    <span style="color: #f57c00; font-weight: bold; margin-left: 10px;">
+                    <span style="color: #f59e0b; font-weight: bold; margin-left: 10px;">
                         <% for(let i=0; i<review.rating; i++) { %>★<% } %>
                     </span>
-                    <p style="margin: 5px 0 0 0; color: #444;"><%= review.comment %></p>
+                    <p style="margin: 6px 0 0 0; color: #475569;"><%= review.comment %></p>
                 </div>
             <% }) %>
         <% } %>
 
         <h3 class="section-title">Leave a Review</h3>
-        <form action="/product/<%= product._id %>/reviews" method="POST">
+        <form action="/product/<%= product._id %>/reviews" method="POST" style="margin-top: 15px;">
             <div class="form-group">
                 <label for="user">Your Name:</label>
                 <input type="text" id="user" name="user" required placeholder="Enter your name">
@@ -205,13 +594,10 @@
         </div>
     </div>
 
-    <!-- Gallery & Zoom JavaScript -->
+    <!-- Gallery, Zoom & Swipe / Slide JavaScript -->
     <script>
         const mediaList = <%- JSON.stringify(allMedia) %>;
         let currentIndex = 0;
-        let scale = 1;
-        let panX = 0;
-        let panY = 0;
 
         function changeMedia(url, type, index) {
             currentIndex = index;
@@ -244,9 +630,6 @@
             if (mediaList.length === 0) return;
             const modal = document.getElementById('lightbox-modal');
             modal.style.display = 'flex';
-            scale = 1;
-            panX = 0;
-            panY = 0;
             updateLightboxContent();
         }
 
@@ -257,9 +640,6 @@
         function slideLightbox(direction) {
             if (mediaList.length === 0) return;
             currentIndex = (currentIndex + direction + mediaList.length) % mediaList.length;
-            scale = 1;
-            panX = 0;
-            panY = 0;
             updateLightboxContent();
         }
 
@@ -267,32 +647,57 @@
             const contentBox = document.getElementById('lightbox-content');
             const media = mediaList[currentIndex];
             if (media.type === 'image') {
-                contentBox.innerHTML = `<img id="lightboxImg" src="${media.url}" style="transform: scale(${scale}) translate(${panX}px, ${panY}px);">`;
+                contentBox.innerHTML = `<img src="${media.url}" alt="Fullscreen Image">`;
             } else {
                 contentBox.innerHTML = `<video src="${media.url}" controls autoplay style="max-width:90vw; max-height:90vh;"></video>`;
             }
         }
 
-        // Mouse Wheel Zoom on Cursor in Lightbox
-        const lightboxModal = document.getElementById('lightbox-modal');
-        lightboxModal.addEventListener('wheel', function(e) {
-            const media = mediaList[currentIndex];
-            if (media.type !== 'image') return; // Zoom only for images
-            
-            e.preventDefault();
-            const zoomIntensity = 0.1;
-            if (e.deltaY < 0) {
-                scale += zoomIntensity; // Zoom In
-            } else {
-                scale = Math.max(1, scale - zoomIntensity); // Zoom Out
-            }
+        // Touch & Mouse Swipe / Slide Support for Main Preview Box
+        const mainBox = document.getElementById('mainPreviewBox');
+        let touchStartX = 0;
+        let touchEndX = 0;
 
-            const contentBox = document.getElementById('lightbox-content');
-            const imgEl = contentBox.querySelector('img');
-            if (imgEl) {
-                imgEl.style.transform = `scale(${scale})`;
+        mainBox.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        mainBox.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        // Mouse drag swipe support for desktop
+        let isDragging = false;
+        let startX = 0;
+
+        mainBox.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+        });
+
+        mainBox.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            let diffX = e.clientX - startX;
+            if (Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    slideMedia(-1); // Swipe Right -> Prev
+                } else {
+                    slideMedia(1);  // Swipe Left -> Next
+                }
             }
         });
+
+        function handleSwipe() {
+            let threshold = 50;
+            if (touchEndX < touchStartX - threshold) {
+                slideMedia(1); // Swipe Left -> Next image
+            }
+            if (touchEndX > touchStartX + threshold) {
+                slideMedia(-1); // Swipe Right -> Prev image
+            }
+        }
     </script>
 </body>
 </html>
