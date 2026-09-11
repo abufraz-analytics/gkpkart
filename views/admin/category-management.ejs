@@ -3,237 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Category: <%= categoryName %> - GkpKart Admin</title>
+    <title><%= categoryName %> - Order & Product Management</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 1200px; margin: 10px auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
+        header { background: #343a40; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 10px; }
+        .back-btn { background: #6c757d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 14px; }
         
-        h2, h3 { color: #333; margin-top: 0; }
-        .header-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        /* Section styling */
+        .section-box { background: white; border: 2px solid #000; border-radius: 6px; margin-bottom: 30px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .section-title { text-align: center; font-weight: bold; font-size: 18px; background: #e9ecef; border: 1px solid #000; padding: 8px; margin-bottom: 15px; }
         
-        .btn { display: inline-block; padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; border: none; cursor: pointer; text-align: center; }
-        .btn:hover { background: #0056b3; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-success { background: #28a745; }
-        .btn-success:hover { background: #218838; }
-
-        /* Responsive Table Container */
-        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 20px; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; background: white; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
-        th { background-color: #f8f9fa; color: #444; }
-
-        .section-box { margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #e1e4e8; }
-        select, input[type="text"], input[type="number"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .search-box input { padding: 6px; width: 200px; border: 1px solid #28a745; border-radius: 4px; }
+        .filter-box { border: 1px solid #28a745; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; color: #28a745; }
         
-        @media (max-width: 480px) {
-            body { padding: 5px; }
-            .container { padding: 10px; }
-            .header-flex { flex-direction: column; align-items: stretch; }
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        th { background: #fff; color: red; }
+        
+        .export-btn { margin-top: 10px; float: right; background: #fff; border: 1px solid #28a745; color: #28a745; padding: 5px 15px; font-weight: bold; cursor: pointer; border-radius: 4px; text-decoration: none; display: inline-block; }
+        .export-btn:hover { background: #28a745; color: #fff; }
+        
+        .action-btn { padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .cancel-btn { background: #dc3545; }
+        .clear-fix::after { content: ""; clear: both; display: table; }
     </style>
 </head>
 <body>
 
+    <header>
+        <h2>Category: <%= categoryName %></h2>
+        <a href="/admin/dashboard" class="back-btn">Back to Dashboard</a>
+    </header>
+
     <div class="container">
-        <div class="header-flex">
-            <h2>Category: <%= categoryName %></h2>
-            <div>
-                <a href="/admin/add-product" class="btn btn-success">+ Add Product</a>
-                <a href="/admin/dashboard" class="btn">← Dashboard</a>
+
+        <!-- ================= TABLE 1: NEW ORDER ITEM ================= -->
+        <div class="section-box">
+            <div class="section-title">New Order Item</div>
+            <div class="table-controls">
+                <div class="search-box"><input type="text" placeholder="Search here..." onkeyup="filterTable(this, 'newTable')"></div>
+                <div class="filter-box">Filter By time</div>
+                <div class="filter-box">Filter By Date</div>
             </div>
+            <table id="newTable">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Product Name</th>
+                        <th>Product Image</th>
+                        <th>Customer Name</th>
+                        <th>Mobile No.</th>
+                        <th>Customer Location</th>
+                        <th>Confirm Status</th>
+                        <th>Item Packed</th>
+                        <th>Item Cancel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (newOrders && newOrders.length > 0) { %>
+                        <% newOrders.forEach((order, index) => { %>
+                            <tr>
+                                <td><%= index + 1 %></td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
+                                <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
+                                <td><%= order.product ? order.product.title : 'N/A' %></td>
+                                <td>
+                                    <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
+                                    <% } %>
+                                </td>
+                                <td><%= order.customerName %></td>
+                                <td><%= order.phone %></td>
+                                <td><%= order.location %></td>
+                                <td style="color: green; font-weight: bold;">Confirm</td>
+                                <td>
+                                    <form action="/admin/order/pack/<%= order._id %>" method="POST">
+                                        <button type="submit" class="action-btn">Packed</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="/admin/order/status/<%= order._id %>" method="POST" onsubmit="return confirmCancel(this)">
+                                        <input type="hidden" name="status" value="Canceled">
+                                        <input type="hidden" name="cancelReason" value="Canceled from New Order stage">
+                                        <button type="submit" class="action-btn cancel-btn">Cancel</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="12" style="text-align: center; color: #777;">No new orders found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="clear-fix"><button class="export-btn" onclick="exportTableToExcel('newTable', '<%= categoryName %>_New_Orders')">Export In Excel</button></div>
         </div>
 
-        <!-- Products Section -->
+        <!-- ================= TABLE 2: PACKED ITEM ================= -->
         <div class="section-box">
-            <h3>Products in this Category</h3>
-            <% if (products && products.length > 0) { %>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
+            <div class="section-title">Packed Item</div>
+            <div class="table-controls">
+                <div class="search-box"><input type="text" placeholder="Search here..." onkeyup="filterTable(this, 'packedTable')"></div>
+                <div class="filter-box">Filter By time</div>
+                <div class="filter-box">Filter By Date</div>
+            </div>
+            <table id="packedTable">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Product Name</th>
+                        <th>Product Image</th>
+                        <th>Customer Name</th>
+                        <th>Mobile No.</th>
+                        <th>Customer Location</th>
+                        <th>Confirm Status</th>
+                        <th>Delivery Boy I'D</th>
+                        <th>Manual Secret code</th>
+                        <th>Out For Delivery</th>
+                        <th>Item Cancel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (packedOrders && packedOrders.length > 0) { %>
+                        <% packedOrders.forEach((order, index) => { %>
                             <tr>
-                                <th>Title</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% products.forEach(product => { %>
-                                <tr>
-                                    <td><%= product.title %></td>
-                                    <td><%= product.brand %></td>
-                                    <td>₹<%= product.price %></td>
+                                <td><%= index + 1 %></td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
+                                <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
+                                <td><%= order.product ? order.product.title : 'N/A' %></td>
+                                <td>
+                                    <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
+                                    <% } %>
+                                </td>
+                                <td><%= order.customerName %></td>
+                                <td><%= order.phone %></td>
+                                <td><%= order.location %></td>
+                                <td style="color: green; font-weight: bold;">Confirm</td>
+                                <form action="/admin/order/dispatch/<%= order._id %>" method="POST">
                                     <td>
-                                        <a href="/admin/edit-product/<%= product._id %>" class="btn" style="padding: 4px 8px; font-size: 12px;">Edit</a>
-                                        <form action="/admin/delete-product/<%= product._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
-                                            <button type="submit" class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;">Delete</button>
-                                        </form>
+                                        <select name="deliveryBoyId" required style="padding: 4px;">
+                                            <option value="">Select Delivery Boy</option>
+                                            <% deliveryBoys.forEach(boy => { %>
+                                                <option value="<%= boy.id %>"><%= boy.id %></option>
+                                            <% }) %>
+                                        </select>
                                     </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <p>No products found in this category.</p>
-            <% } %>
+                                    <td>
+                                        <input type="text" name="manualSecretCode" value="<%= order.secretKey %>" required style="width: 70px; text-align: center;">
+                                    </td>
+                                    <td>
+                                        <button type="submit" class="action-btn" style="background: #ffc107; color: #000;">Dispatch</button>
+                                    </td>
+                                </form>
+                                <td>
+                                    <form action="/admin/order/status/<%= order._id %>" method="POST" onsubmit="return confirmCancel(this)">
+                                        <input type="hidden" name="status" value="Canceled">
+                                        <input type="hidden" name="cancelReason" value="Canceled from Packed stage">
+                                        <button type="submit" class="action-btn cancel-btn">Cancel</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="14" style="text-align: center; color: #777;">No packed orders found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="clear-fix"><button class="export-btn" onclick="exportTableToExcel('packedTable', '<%= categoryName %>_Packed_Orders')">Export In Excel</button></div>
         </div>
 
-        <!-- New Orders Section -->
+        <!-- ================= TABLE 3: OUT FOR DELIVERY ================= -->
         <div class="section-box">
-            <h3>New Orders</h3>
-            <% if (newOrders && newOrders.length > 0) { %>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
+            <div class="section-title">Out For Delivery</div>
+            <div class="table-controls">
+                <div class="search-box"><input type="text" placeholder="Search here..." onkeyup="filterTable(this, 'ofdTable')"></div>
+                <div class="filter-box">Filter By time</div>
+                <div class="filter-box">Filter By Date</div>
+            </div>
+            <table id="ofdTable">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Product Name</th>
+                        <th>Product Image</th>
+                        <th>Customer Name</th>
+                        <th>Mobile No.</th>
+                        <th>Customer Location</th>
+                        <th>Confirm Status</th>
+                        <th>Delivery Boy ID</th>
+                        <th>Manual Secret Code</th>
+                        <th>Delivery Status</th>
+                        <th>Item Cancel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (outForDeliveryOrders && outForDeliveryOrders.length > 0) { %>
+                        <% outForDeliveryOrders.forEach((order, index) => { %>
                             <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Product</th>
-                                <th>Location</th>
-                                <th>Action</th>
+                                <td><%= index + 1 %></td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
+                                <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
+                                <td><%= order.product ? order.product.title : 'N/A' %></td>
+                                <td>
+                                    <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
+                                    <% } %>
+                                </td>
+                                <td><%= order.customerName %></td>
+                                <td><%= order.phone %></td>
+                                <td><%= order.location %></td>
+                                <td style="color: green; font-weight: bold;">Confirm</td>
+                                <td><%= order.deliveryBoyId %></td>
+                                <td><%= order.secretKey %></td>
+                                <td>
+                                    <form action="/admin/order/status/<%= order._id %>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="status" value="Delivered">
+                                        <button type="submit" class="action-btn" style="background: #28a745;">Mark Delivered</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="/admin/order/status/<%= order._id %>" method="POST" onsubmit="return confirmCancel(this)" style="display:inline;">
+                                        <input type="hidden" name="status" value="Canceled">
+                                        <input type="hidden" name="cancelReason" value="Canceled from Out For Delivery stage">
+                                        <button type="submit" class="action-btn cancel-btn">Cancel</button>
+                                    </form>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% newOrders.forEach(order => { %>
-                                <tr>
-                                    <td><%= order.customerName %></td>
-                                    <td><%= order.phone %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
-                                    <td><%= order.location %></td>
-                                    <td>
-                                        <form action="/admin/order/pack/<%= order._id %>" method="POST" style="display:inline;">
-                                            <button type="submit" class="btn btn-success" style="padding: 4px 8px; font-size: 12px;">Pack Order</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <p>No new orders.</p>
-            <% } %>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="14" style="text-align: center; color: #777;">No orders out for delivery.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="clear-fix"><button class="export-btn" onclick="exportTableToExcel('ofdTable', '<%= categoryName %>_OutForDelivery_Orders')">Export In Excel</button></div>
         </div>
 
-        <!-- Packed Orders Section -->
+        <!-- ================= TABLE 4: DELIVERED ITEM ================= -->
         <div class="section-box">
-            <h3>Packed Orders (Ready to Dispatch)</h3>
-            <% if (packedOrders && packedOrders.length > 0) { %>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
+            <div class="section-title">Delivered Item</div>
+            <div class="table-controls">
+                <div class="search-box"><input type="text" placeholder="Search here..." onkeyup="filterTable(this, 'deliveredTable')"></div>
+                <div class="filter-box">Filter By time</div>
+                <div class="filter-box">Filter By Date</div>
+            </div>
+            <table id="deliveredTable">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Product Name</th>
+                        <th>Product Image</th>
+                        <th>Customer Name</th>
+                        <th>Mobile No.</th>
+                        <th>Customer Location</th>
+                        <th>Delivered Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (deliveredOrders && deliveredOrders.length > 0) { %>
+                        <% deliveredOrders.forEach((order, index) => { %>
                             <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Product</th>
-                                <th>Assign Delivery Boy & Dispatch</th>
+                                <td><%= index + 1 %></td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
+                                <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
+                                <td><%= order.product ? order.product.title : 'N/A' %></td>
+                                <td>
+                                    <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
+                                    <% } %>
+                                </td>
+                                <td><%= order.customerName %></td>
+                                <td><%= order.phone %></td>
+                                <td><%= order.location %></td>
+                                <td style="color: green; font-weight: bold;">Successfully Delivered</td>
+                                <td>
+                                    <form action="/admin/order/delete/<%= order._id %>" method="POST" onsubmit="return confirm('WARNING: Are you sure you want to delete this delivered item record?')">
+                                        <button type="submit" class="action-btn cancel-btn">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% packedOrders.forEach(order => { %>
-                                <tr>
-                                    <td><%= order.customerName %></td>
-                                    <td><%= order.phone %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
-                                    <td>
-                                        <form action="/admin/order/dispatch/<%= order._id %>" method="POST" style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                            <select name="deliveryBoyId" required style="font-size: 12px;">
-                                                <option value="">Select Delivery Boy</option>
-                                                <% deliveryBoys.forEach(boy => { %>
-                                                    <option value="<%= boy.id %>"><%= boy.id %></option>
-                                                <% }) %>
-                                            </select>
-                                            <input type="text" name="manualSecretCode" placeholder="Secret Code" style="width: 90px; font-size: 12px;">
-                                            <button type="submit" class="btn btn-success" style="padding: 4px 8px; font-size: 12px;">Dispatch</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <p>No packed orders.</p>
-            <% } %>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="11" style="text-align: center; color: #777;">No delivered items found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="clear-fix"><button class="export-btn" onclick="exportTableToExcel('deliveredTable', '<%= categoryName %>_Delivered_Orders')">Export In Excel</button></div>
         </div>
 
-        <!-- Out For Delivery Section -->
+        <!-- ================= TABLE 5: CANCELED ITEM ================= -->
         <div class="section-box">
-            <h3>Out For Delivery</h3>
-            <% if (outForDeliveryOrders && outForDeliveryOrders.length > 0) { %>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
+            <div class="section-title">Canceled Item</div>
+            <div class="table-controls">
+                <div class="search-box"><input type="text" placeholder="Search here..." onkeyup="filterTable(this, 'canceledTable')"></div>
+                <div class="filter-box">Filter By time</div>
+                <div class="filter-box">Filter By Date</div>
+            </div>
+            <table id="canceledTable">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Product Name</th>
+                        <th>Product Image</th>
+                        <th>Customer Name</th>
+                        <th>Mobile No.</th>
+                        <th>Customer Location</th>
+                        <th>Confirm Status</th>
+                        <th>Delivered Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (canceledOrders && canceledOrders.length > 0) { %>
+                        <% canceledOrders.forEach((order, index) => { %>
                             <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Assigned Boy</th>
-                                <th>Secret Key</th>
-                                <th>Actions</th>
+                                <td><%= index + 1 %></td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
+                                <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
+                                <td><%= order.product ? order.product.title : 'N/A' %></td>
+                                <td>
+                                    <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
+                                    <% } %>
+                                </td>
+                                <td><%= order.customerName %></td>
+                                <td><%= order.phone %></td>
+                                <td><%= order.location %></td>
+                                <td>Canceled</td>
+                                <td style="color: red; font-weight: bold;"><%= order.cancelReason || 'Canceled' %></td>
+                                <td>
+                                    <form action="/admin/order/delete/<%= order._id %>" method="POST" onsubmit="return confirm('WARNING: Are you sure you want to delete this canceled order record?')">
+                                        <button type="submit" class="action-btn cancel-btn">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% outForDeliveryOrders.forEach(order => { %>
-                                <tr>
-                                    <td><%= order.customerName %></td>
-                                    <td><%= order.phone %></td>
-                                    <td><%= order.deliveryBoyId %></td>
-                                    <td><strong><%= order.secretKey %></strong></td>
-                                    <td>
-                                        <form action="/admin/order/status/<%= order._id %>" method="POST" style="display:inline;">
-                                            <input type="hidden" name="status" value="Delivered">
-                                            <button type="submit" class="btn btn-success" style="padding: 4px 8px; font-size: 12px;">Mark Delivered</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <p>No orders out for delivery.</p>
-            <% } %>
-        </div>
-
-        <!-- Delivered Orders Section -->
-        <div class="section-box">
-            <h3>Delivered Orders</h3>
-            <% if (deliveredOrders && deliveredOrders.length > 0) { %>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Product</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% deliveredOrders.forEach(order => { %>
-                                <tr>
-                                    <td><%= order.customerName %></td>
-                                    <td><%= order.phone %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
-                                    <td>
-                                        <form action="/admin/order/delete/<%= order._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this order record?');">
-                                            <button type="submit" class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;">Remove</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <p>No delivered orders history.</p>
-            <% } %>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="12" style="text-align: center; color: #777;">No canceled items found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="clear-fix"><button class="export-btn" onclick="exportTableToExcel('canceledTable', '<%= categoryName %>_Canceled_Orders')">Export In Excel</button></div>
         </div>
 
     </div>
 
+    <script>
+        // Search filter logic for tables
+        function filterTable(input, tableId) {
+            let filter = input.value.toLowerCase();
+            let table = document.getElementById(tableId);
+            let tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td");
+                let match = false;
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        if (td[j].innerHTML.toLowerCase().indexOf(filter) > -1) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = match ? "" : "none";
+            }
+        }
+
+        // Confirm cancellation with prompt
+        function confirmCancel(form) {
+            let reason = prompt("Please enter the reason for cancellation:");
+            if (reason === null || reason.trim() === "") {
+                alert("Cancellation aborted. Reason is required.");
+                return false;
+            }
+            form.querySelector('input[name="cancelReason"]').value = reason;
+            return true;
+        }
+
+        // Export table to Excel functionality
+        function exportTableToExcel(tableId, filename = 'excel_data') {
+            let downloadLink;
+            let dataType = 'application/vnd.ms-excel';
+            let tableSelect = document.getElementById(tableId);
+            let tableHTML = tableSelect.outerHTML.replace(/<form[^>]*>|<\/form>/gi, ''); // remove forms for clean excel
+
+            downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+
+            let blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+            let url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = filename + '.xls';
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
 </body>
 </html>
