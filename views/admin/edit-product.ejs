@@ -5,47 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Products (Edit / Delete)</title>
     <style>
+        * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        h2 { text-align: center; background: #000; color: #fff; padding: 10px; border-radius: 4px; margin-top: 0; }
+        h2 { text-align: center; background: #000; color: #fff; padding: 12px; border-radius: 4px; margin-top: 0; font-size: 20px; text-transform: uppercase; }
         
         .top-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-        .search-box input { padding: 8px; width: 250px; border: 2px solid #28a745; border-radius: 4px; }
+        .search-box input { padding: 8px 12px; width: 100%; max-width: 280px; border: 2px solid #28a745; border-radius: 4px; font-size: 14px; }
         .filters { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-filter { padding: 8px 12px; border: 2px solid #28a745; background: #fff; color: #28a745; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-filter { padding: 8px 12px; border: 2px solid #28a745; background: #fff; color: #28a745; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .btn-filter:hover { background: #28a745; color: #fff; }
         
-        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; border: 2px solid #000; }
-        th, td { padding: 10px; text-align: center; border: 1px solid #000; font-size: 14px; }
+        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 20px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 750px; border: 2px solid #000; }
+        th, td { padding: 10px; text-align: center; border: 1px solid #000; font-size: 14px; vertical-align: middle; }
         th { background-color: #fff; color: #dc3545; font-weight: bold; border-bottom: 2px solid #000; }
         
-        img.prod-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+        img.prod-img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; display: block; margin: 0 auto; }
         
-        .btn { padding: 6px 12px; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; border: none; cursor: pointer; display: inline-block; }
+        .btn { padding: 6px 12px; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; border: none; cursor: pointer; display: inline-block; font-weight: bold; }
         .btn-edit { background: #007bff; }
+        .btn-edit:hover { background: #0056b3; }
         .btn-delete { background: #dc3545; }
-        .btn-excel { background: #28a745; float: right; margin-top: 10px; font-weight: bold; }
+        .btn-delete:hover { background: #c82333; }
+        .btn-excel { background: #28a745; float: right; margin-top: 10px; font-weight: bold; padding: 8px 15px; }
+        .btn-excel:hover { background: #218838; }
         
-        .back-link { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #007bff; font-weight: bold; }
+        .back-link { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 14px; }
+        .back-link:hover { text-decoration: underline; }
+
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .container { padding: 10px; }
+            .top-controls { flex-direction: column; align-items: stretch; }
+            .search-box input { max-width: 100%; width: 100%; }
+            .filters { width: 100%; justify-content: space-between; }
+            .btn-filter { flex: 1; text-align: center; }
+            h2 { font-size: 16px; padding: 10px; }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <a href="/admin/dashboard" class="back-link">← Back to Dashboard</a>
-        <h2>manage product (edit / delete)</h2>
+        <h2>Manage Product (Edit / Delete)</h2>
 
         <!-- Search and Filters Section -->
         <div class="top-controls">
             <div class="search-box">
-                <form action="/admin/manage-products" method="GET">
-                    <input type="text" name="search" placeholder="search here..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                <form action="/admin/products" method="GET">
+                    <input type="text" name="search" placeholder="Search product name..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
                 </form>
             </div>
             <div class="filters">
-                <button type="button" class="btn-filter" onclick="filterByTime()">filter by time</button>
-                <button type="button" class="btn-filter" onclick="filterByDate()">filter by date</button>
+                <button type="button" class="btn-filter" onclick="filterByTime()">Filter by Time</button>
+                <button type="button" class="btn-filter" onclick="filterByDate()">Filter by Date</button>
             </div>
         </div>
 
@@ -54,14 +71,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>s. n.</th>
-                        <th>date</th>
-                        <th>time</th>
-                        <th>price</th>
-                        <th>product name</th>
-                        <th>product img</th>
-                        <th>delete</th>
-                        <th>edit</th>
+                        <th>S.N.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Product Name</th>
+                        <th>Product Img</th>
+                        <th>Delete</th>
+                        <th>Edit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,28 +89,27 @@
                                 <td><%= product.createdAt ? product.createdAt.toLocaleDateString() : 'N/A' %></td>
                                 <td><%= product.createdAt ? product.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A' %></td>
                                 <td>₹<%= product.price %></td>
-                                <td style="text-align: left;"><%= product.title %></td>
+                                <td style="text-align: left; font-weight: 500;"><%= product.title %></td>
                                 <td>
                                     <% if (product.images && product.images.length > 0) { %>
                                         <img src="<%= product.images[0] %>" alt="Product" class="prod-img">
                                     <% } else { %>
-                                        <span>No Img</span>
+                                        <span style="font-size: 12px; color: #777;">No Img</span>
                                     <% } %>
                                 </td>
                                 <td>
-                                    <form action="/admin/delete-product/<%= product._id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                    <form action="/admin/delete-product/<%= product._id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="margin:0;">
                                         <button type="submit" class="btn btn-delete">Delete</button>
                                     </form>
                                 </td>
                                 <td>
                                     <a href="/admin/edit-product/<%= product._id %>" class="btn btn-edit">Edit</a>
-                                }}>
                                 </td>
                             </tr>
                         <% }) %>
                     <% } else { %>
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 20px;">No products found</td>
+                            <td colspan="8" style="text-align: center; padding: 25px; color: #777;">No products found</td>
                         </tr>
                     <% } %>
                 </tbody>
@@ -102,13 +118,12 @@
 
         <!-- Export in Excel Button -->
         <div>
-            <button type="button" class="btn btn-excel" onclick="exportTableToExcel()">export in excel</button>
+            <button type="button" class="btn btn-excel" onclick="exportTableToExcel()">Export in Excel</button>
             <div style="clear: both;"></div>
         </div>
     </div>
 
     <script>
-        // Simple client-side sorting/filtering placeholders or table export
         function exportTableToExcel() {
             let table = document.querySelector("table");
             let html = table.outerHTML;
