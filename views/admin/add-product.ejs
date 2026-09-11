@@ -3,89 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GkpKart - Admin Add Product</title>
+    <title>Add Product - GkpKart Admin</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2874f0; }
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #333; margin-top: 0; font-size: 22px; text-align: center; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-        input[type="text"], input[type="number"], textarea, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        textarea { resize: vertical; height: 100px; }
-        button { background-color: #2874f0; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
-        button:hover { background-color: #1b5ed8; }
-        .note { font-size: 12px; color: #666; margin-top: 3px; }
-        .back-link { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #2874f0; font-weight: bold; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #444; }
+        input[type="text"], input[type="number"], select, textarea, input[type="file"] {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;
+        }
+        textarea { resize: vertical; }
+        button { background: #28a745; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background: #218838; }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #007bff; text-decoration: none; font-size: 14px; font-weight: bold; }
+        
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 480px) {
+            body { padding: 5px; }
+            .container { padding: 15px; margin: 10px auto; }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <a href="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
-        <h2>GkpKart Admin - Add New Product</h2>
-        
-        <!-- Form with submit handler to prevent double clicking and show status -->
-        <form id="addProductForm" action="/admin/add-product" method="POST" enctype="multipart/form-data">
-            
+        <h2>Add New Product</h2>
+        <form action="/admin/add-product" method="POST" enctype="multipart/form-data">
             <div class="form-group">
-                <label for="title">Product Title (Mobile / Electronics):</label>
-                <input type="text" id="title" name="title" required placeholder="e.g. Samsung Galaxy M34">
+                <label>Product Title</label>
+                <input type="text" name="title" placeholder="Enter product name" required>
             </div>
-
             <div class="form-group">
-                <label for="brand">Brand Name:</label>
-                <input type="text" id="brand" name="brand" required placeholder="e.g. Samsung, Apple, Redmi">
+                <label>Brand Name</label>
+                <input type="text" name="brand" placeholder="Enter brand" required>
             </div>
-
             <div class="form-group">
-                <label for="price">Price (₹):</label>
-                <input type="number" id="price" name="price" required placeholder="e.g. 15999">
+                <label>Price (₹)</label>
+                <input type="number" name="price" placeholder="Enter price in numbers" required>
             </div>
-
             <div class="form-group">
-                <label for="whatsappNumber">WhatsApp Business Number (with country code):</label>
-                <input type="text" id="whatsappNumber" name="whatsappNumber" required placeholder="e.g. 919876543210">
+                <label>Category</label>
+                <select name="category" required>
+                    <option value="">Select Category</option>
+                    <option value="Shoes">Shoes</option>
+                    <option value="Mobile Accessories">Mobile Accessories</option>
+                    <option value="Small Electric Item">Small Electric Item</option>
+                    <option value="Big Electric Item">Big Electric Item</option>
+                    <option value="Ladies & Gents Makeup Items">Ladies & Gents Makeup Items</option>
+                </select>
             </div>
-
-            <!-- Multiple Product Images Upload -->
             <div class="form-group">
-                <label for="images">Product Images (Multiple select allowed):</label>
-                <input type="file" id="images" name="images" accept="image/*" multiple required>
-                <div class="note">Aap ek sath multiple photos select kar sakte hain.</div>
+                <label>Description</label>
+                <textarea name="description" rows="4" placeholder="Enter product details..." required></textarea>
             </div>
-
-            <!-- Optional Product Videos Upload -->
             <div class="form-group">
-                <label for="videos">Product Videos (Optional):</label>
-                <input type="file" id="videos" name="videos" accept="video/*" multiple>
-                <div class="note">Agar product ka video hai toh yahan select karein (Avoid very large video files on mobile data).</div>
+                <label>Product Images (Multiple allowed)</label>
+                <input type="file" name="images" multiple required>
             </div>
-
             <div class="form-group">
-                <label for="description">Product Description & Specs:</label>
-                <textarea id="description" name="description" required placeholder="Write RAM, ROM, Camera details..."></textarea>
+                <label>Product Videos (Optional)</label>
+                <input type="file" name="videos" multiple>
             </div>
-
             <div class="form-group">
-                <label for="returnPolicy">Return Policy:</label>
-                <input type="text" id="returnPolicy" name="returnPolicy" value="7 Days Replacement Policy">
+                <label>WhatsApp Contact Number</label>
+                <input type="text" name="whatsappNumber" placeholder="Enter WhatsApp number" required>
             </div>
-
-            <button type="submit" id="submitBtn">Upload Product</button>
+            <button type="submit">Upload Product</button>
         </form>
+        <a href="/admin/dashboard" class="back-link">← Back to Dashboard</a>
     </div>
-
-    <script>
-        // Mobile par upload ke waqt user ko pata chalne ke liye script
-        const form = document.getElementById('addProductForm');
-        const submitBtn = document.getElementById('submitBtn');
-
-        form.addEventListener('submit', function() {
-            submitBtn.disabled = true;
-            submitBtn.style.backgroundColor = '#999';
-            submitBtn.innerText = 'Uploading, Please Wait...';
-        });
-    </script>
 
 </body>
 </html>
