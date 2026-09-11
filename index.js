@@ -27,25 +27,38 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('Database connection error:', err));
 
-// Home route with Flexible Search functionality (Partial & single word match)
+// Helper: Get 4 Delivery Boys from Environment Variables
+const getDeliveryBoys = () => {
+    return [
+        { id: process.env.DELIVERY_ID_1 || 'del1', pass: process.env.DELIVERY_PASS_1 || 'pass1' },
+        { id: process.env.DELIVERY_ID_2 || 'del2', pass: process.env.DELIVERY_PASS_2 || 'pass2' },
+        { id: process.env.DELIVERY_ID_3 || 'del3', pass: process.env.DELIVERY_PASS_3 || 'pass3' },
+        { id: process.env.DELIVERY_ID_4 || 'del4', pass: process.env.DELIVERY_PASS_4 || 'pass4' }
+    ];
+};
+
+// Home route with Category filter and Flexible Search functionality
 app.get('/', async (req, res) => {
     try {
         let searchQuery = req.query.search ? req.query.search.trim() : '';
+        let selectedCategory = req.query.category ? req.query.category.trim() : '';
         let query = {};
+
+        if (selectedCategory) {
+            query.category = selectedCategory;
+        }
 
         if (searchQuery) {
             const searchRegex = new RegExp(searchQuery, 'i');
-            query = {
-                $or: [
-                    { title: searchRegex },
-                    { brand: searchRegex },
-                    { description: searchRegex }
-                ]
-            };
+            query.$or = [
+                { title: searchRegex },
+                { brand: searchRegex },
+                { description: searchRegex }
+            ];
         }
 
-        const products = await Product.find(query);
-        res.render('index', { products, searchQuery });
+        const products = await Product.find(query).sort({ createdAt: -1 });
+        res.render('index', { products, searchQuery, selectedCategory });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
@@ -73,30 +86,52 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// Handle Order Submission from Product Detail Page with Success Popup Alert
+// Handle Order Submission with Secret Key Generation
 app.post('/order/:id', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress } = req.body;
         const productId = req.params.id;
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return res.status(404).send('Product not found');
+        }
+
+        // Generate a 4-digit random secret key for delivery verification
+        const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
 
         const newOrder = new Order({
             product: productId,
             customerName,
             phone: customerPhone,
-            location: customerAddress
+            location: customerAddress,
+            category: product.category,
+            orderStatus: 'New',
+            secretKey: secretKey
         });
 
         await newOrder.save();
         
         res.send(`
             <script>
-                alert('Order Submitted Successfully!');
-                window.location.href = '/';
+                alert('Order Placed Successfully! Save your order info.');
+                window.location.href = '/view-orders';
             </script>
         `);
     } catch (err) {
         console.error('Error saving order:', err.message);
         res.status(500).send('Server Error during order placement');
+    }
+});
+
+// Customer View Orders Page (Browser/Device specific tracking via localStorage or session list)
+app.get('/view-orders', async (req, res) => {
+    try {
+        // Render customer tracking view (can display recent orders placed from this browser)
+        res.render('customer-orders');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
     }
 });
 
@@ -120,7 +155,7 @@ app.post('/product/:id/reviews', async (req, res) => {
     }
 });
 
-// Admin Protection Middleware
+// ================= ADMIN AUTHENTICATION =================
 const isAdminLoggedIn = (req, res, next) => {
     if (req.session && req.session.isAdmin) {
         return next();
@@ -128,15 +163,12 @@ const isAdminLoggedIn = (req, res, next) => {
     res.redirect('/admin/login');
 };
 
-// Admin Login Route (GET)
 app.get('/admin/login', (req, res) => {
     res.render('admin/login', { error: null });
 });
 
-// Admin Login Processing (POST)
 app.post('/admin/login', (req, res) => {
     const { username, password } = req.body;
-    
     if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
         req.session.isAdmin = true;
         res.redirect('/admin/dashboard');
@@ -145,30 +177,205 @@ app.post('/admin/login', (req, res) => {
     }
 });
 
-// Admin Dashboard Route (GET) - Fetches orders and products for management
-app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
-    try {
-        const orders = await Order.find({}).populate('product').sort({ createdAt: -1 });
-        const products = await Product.find({}).sort({ createdAt: -1 });
-        res.render('admin/dashboard', { orders, products });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-});
-
-// Admin Logout Route
 app.get('/admin/logout', (req, res) => {
     req.session.destroy(() => {
         res.redirect('/admin/login');
     });
 });
 
-app.get('/admin/add-product', (req, res) => {
-    res.redirect('/admin/dashboard');
+// ================= DELIVERY BOY AUTHENTICATION =================
+const isDeliveryLoggedIn = (req, res, next) => {
+    if (req.session && req.session.deliveryBoyId) {
+        return next();
+    }
+    res.redirect('/delivery/login');
+};
+
+app.get('/delivery/login', (req, res) => {
+    res.render('delivery/login', { error: null });
 });
 
-// Add Product Processing (POST) with Multiple Images & Videos Support
+app.post('/delivery/login', (req, res) => {
+    const { deliveryId, password } = req.body;
+    const deliveryBoys = getDeliveryBoys();
+    const matchedBoy = deliveryBoys.find(b => b.id === deliveryId && b.pass === password);
+
+    if (matchedBoy) {
+        req.session.deliveryBoyId = matchedBoy.id;
+        res.redirect('/delivery/dashboard');
+    } else {
+        res.render('delivery/login', { error: 'Invalid Delivery ID or Password!' });
+    }
+});
+
+app.get('/delivery/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/delivery/login');
+    });
+});
+
+// Delivery Boy Dashboard Route
+app.get('/delivery/dashboard', isDeliveryLoggedIn, async (req, res) => {
+    try {
+        const deliveryBoyId = req.session.deliveryBoyId;
+        // Fetch orders assigned to this delivery boy that are 'Out For Delivery'
+        const assignedOrders = await Order.find({ 
+            deliveryBoyId: deliveryBoyId, 
+            orderStatus: 'Out For Delivery' 
+        }).populate('product').sort({ createdAt: -1 });
+
+        res.render('delivery/dashboard', { deliveryBoyId, orders: assignedOrders });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Delivery Boy: Submit Secret Key to Complete Delivery
+app.post('/delivery/complete-order/:id', isDeliveryLoggedIn, async (req, res) => {
+    try {
+        const { enteredKey } = req.body;
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        if (order.secretKey === enteredKey.trim()) {
+            order.orderStatus = 'Delivered';
+            await order.save();
+            
+            // Auto schedule removal or status update after 1 min / handled in view or cron
+            setTimeout(async () => {
+                // Background cleanup logic if needed
+            }, 60000);
+
+            res.redirect('/delivery/dashboard');
+        } else {
+            res.send(`
+                <script>
+                    alert('Invalid Secret Key! Please check with customer.');
+                    window.location.href = '/delivery/dashboard';
+                </script>
+            `);
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ================= ADMIN DASHBOARD & CATEGORY MANAGEMENT =================
+app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
+    try {
+        const products = await Product.find({}).sort({ createdAt: -1 });
+        res.render('admin/dashboard', { products });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Category-Specific Management Page (Manage Products & Orders for a specific category)
+app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
+    try {
+        const categoryName = req.params.categoryName;
+        const products = await Product.find({ category: categoryName }).sort({ createdAt: -1 });
+        
+        // Fetch orders categorized by their lifecycle stages
+        const newOrders = await Order.find({ category: categoryName, orderStatus: 'New' }).populate('product').sort({ createdAt: -1 });
+        const packedOrders = await Order.find({ category: categoryName, orderStatus: 'Packed' }).populate('product').sort({ createdAt: -1 });
+        const outForDeliveryOrders = await Order.find({ category: categoryName, orderStatus: 'Out For Delivery' }).populate('product').sort({ createdAt: -1 });
+        const deliveredOrders = await Order.find({ category: categoryName, orderStatus: 'Delivered' }).populate('product').sort({ createdAt: -1 });
+        const canceledOrders = await Order.find({ category: categoryName, orderStatus: 'Canceled' }).populate('product').sort({ createdAt: -1 });
+
+        res.render('admin/category-management', {
+            categoryName,
+            products,
+            newOrders,
+            packedOrders,
+            outForDeliveryOrders,
+            deliveredOrders,
+            canceledOrders,
+            deliveryBoys: getDeliveryBoys()
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ================= ORDER LIFECYCLE ACTIONS (ADMIN) =================
+
+// 1. Pack Order (Move from New -> Packed)
+app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (order) {
+            order.orderStatus = 'Packed';
+            await order.save();
+        }
+        res.redirect('back');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 2. Assign Delivery Boy & Move to Out For Delivery
+app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
+    try {
+        const { deliveryBoyId, manualSecretCode } = req.body;
+        const order = await Order.findById(req.params.id);
+        
+        if (order) {
+            order.deliveryBoyId = deliveryBoyId;
+            if (manualSecretCode && manualSecretCode.trim() !== '') {
+                order.secretKey = manualSecretCode.trim();
+            }
+            order.orderStatus = 'Out For Delivery';
+            await order.save();
+        }
+        res.redirect('back');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 3. Direct Admin Deliver or Cancel
+app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
+    try {
+        const { status, cancelReason } = req.body;
+        const order = await Order.findById(req.params.id);
+        
+        if (order) {
+            order.orderStatus = status;
+            if (status === 'Canceled' && cancelReason) {
+                order.cancelReason = cancelReason;
+            }
+            await order.save();
+        }
+        res.redirect('back');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 4. Delete Delivered or Canceled Item
+app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
+    try {
+        await Order.findByIdAndDelete(req.params.id);
+        res.redirect('back');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// ================= PRODUCT CRUD ROUTES =================
+
 app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
     { name: 'images', maxCount: 10 },
     { name: 'videos', maxCount: 5 }
@@ -181,13 +388,14 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
         const imagePaths = req.files.images.map(file => file.path);
         const videoPaths = req.files.videos ? req.files.videos.map(file => file.path) : [];
 
-        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
+        const { title, brand, price, description, category, whatsappNumber, returnPolicy } = req.body;
         
         const newProduct = new Product({
             title,
             brand,
             price: price ? Number(price) : 0,
             description,
+            category,
             images: imagePaths,
             videos: videoPaths,
             whatsappNumber,
@@ -202,20 +410,16 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
     }
 });
 
-// --- ADMIN EDIT & DELETE ROUTES ---
-
-// 1. Delete Product Route
 app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
-        res.redirect('/admin/dashboard');
+        res.redirect('back');
     } catch (err) {
         console.error('Error deleting product:', err.message);
         res.status(500).send('Server Error during product deletion');
     }
 });
 
-// 2. Edit Product Route (GET Form)
 app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -229,18 +433,18 @@ app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// 3. Edit Product Route (POST Update) - Safe & Robust Version
 app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
     { name: 'images', maxCount: 10 },
     { name: 'videos', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { title, brand, price, description, whatsappNumber, returnPolicy } = req.body;
+        const { title, brand, price, description, category, whatsappNumber, returnPolicy } = req.body;
         
         const updateData = {
             title,
             brand,
             description,
+            category,
             whatsappNumber,
             returnPolicy
         };
@@ -249,12 +453,10 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
             updateData.price = Number(price);
         }
 
-        // If new images are uploaded, update the images array
         if (req.files && req.files.images && req.files.images.length > 0) {
             updateData.images = req.files.images.map(file => file.path);
         }
 
-        // If new videos are uploaded, update the videos array
         if (req.files && req.files.videos && req.files.videos.length > 0) {
             updateData.videos = req.files.videos.map(file => file.path);
         }
