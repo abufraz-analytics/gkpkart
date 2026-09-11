@@ -124,10 +124,9 @@ app.post('/order/:id', async (req, res) => {
     }
 });
 
-// Customer View Orders Page (Browser/Device specific tracking via localStorage or session list)
+// Customer View Orders Page
 app.get('/view-orders', async (req, res) => {
     try {
-        // Render customer tracking view (can display recent orders placed from this browser)
         res.render('customer-orders');
     } catch (err) {
         console.error(err);
@@ -218,7 +217,6 @@ app.get('/delivery/logout', (req, res) => {
 app.get('/delivery/dashboard', isDeliveryLoggedIn, async (req, res) => {
     try {
         const deliveryBoyId = req.session.deliveryBoyId;
-        // Fetch orders assigned to this delivery boy that are 'Out For Delivery'
         const assignedOrders = await Order.find({ 
             deliveryBoyId: deliveryBoyId, 
             orderStatus: 'Out For Delivery' 
@@ -244,12 +242,6 @@ app.post('/delivery/complete-order/:id', isDeliveryLoggedIn, async (req, res) =>
         if (order.secretKey === enteredKey.trim()) {
             order.orderStatus = 'Delivered';
             await order.save();
-            
-            // Auto schedule removal or status update after 1 min / handled in view or cron
-            setTimeout(async () => {
-                // Background cleanup logic if needed
-            }, 60000);
-
             res.redirect('/delivery/dashboard');
         } else {
             res.send(`
@@ -276,13 +268,12 @@ app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// Category-Specific Management Page (Manage Products & Orders for a specific category)
+// Category-Specific Management Page
 app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
     try {
         const categoryName = req.params.categoryName;
         const products = await Product.find({ category: categoryName }).sort({ createdAt: -1 });
         
-        // Fetch orders categorized by their lifecycle stages
         const newOrders = await Order.find({ category: categoryName, orderStatus: 'New' }).populate('product').sort({ createdAt: -1 });
         const packedOrders = await Order.find({ category: categoryName, orderStatus: 'Packed' }).populate('product').sort({ createdAt: -1 });
         const outForDeliveryOrders = await Order.find({ category: categoryName, orderStatus: 'Out For Delivery' }).populate('product').sort({ createdAt: -1 });
@@ -306,8 +297,6 @@ app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
 });
 
 // ================= ORDER LIFECYCLE ACTIONS (ADMIN) =================
-
-// 1. Pack Order (Move from New -> Packed)
 app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -322,7 +311,6 @@ app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// 2. Assign Delivery Boy & Move to Out For Delivery
 app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const { deliveryBoyId, manualSecretCode } = req.body;
@@ -343,7 +331,6 @@ app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// 3. Direct Admin Deliver or Cancel
 app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const { status, cancelReason } = req.body;
@@ -363,7 +350,6 @@ app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// 4. Delete Delivered or Canceled Item
 app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
     try {
         await Order.findByIdAndDelete(req.params.id);
@@ -376,7 +362,7 @@ app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
 
 // ================= PRODUCT CRUD ROUTES =================
 
-// ADD PRODUCT - GET ROUTE (Render Add Product Form)
+// ADD PRODUCT - GET ROUTE
 app.get('/admin/add-product', isAdminLoggedIn, (req, res) => {
     try {
         res.render('admin/add-product');
@@ -430,13 +416,36 @@ app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
+// MANAGE / EDIT PRODUCTS LIST ROUTE (Fixes Cannot GET /admin/products)
+app.get('/admin/products', isAdminLoggedIn, async (req, res) => {
+    try {
+        let searchQuery = req.query.search ? req.query.search.trim() : '';
+        let query = {};
+
+        if (searchQuery) {
+            const searchRegex = new RegExp(searchQuery, 'i');
+            query.$or = [
+                { title: searchRegex },
+                { brand: searchRegex },
+                { description: searchRegex }
+            ];
+        }
+
+        const products = await Product.find(query).sort({ createdAt: -1 });
+        res.render('admin/edit-product', { products, searchQuery });
+    } catch (err) {
+        console.error('Error fetching products for management:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
 app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product) {
             return res.redirect('/admin/dashboard');
         }
-        res.render('admin/edit-product', { product });
+        res.render('admin/edit-product-form', { product }); // Note: Ensure your single product form template is named accordingly or keep edit-product if handled via form
     } catch (err) {
         console.error('Error fetching product for edit:', err.message);
         res.redirect('/admin/dashboard');
