@@ -5,45 +5,269 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - GkpKart</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; }
-        header { background: #343a40; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h2 { color: #333; margin-top: 0; }
-        .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
-        .category-card { background: #007bff; color: white; padding: 20px; border-radius: 6px; text-align: center; text-decoration: none; font-weight: bold; font-size: 16px; transition: background 0.2s; }
-        .category-card:hover { background: #0056b3; }
-        .logout-btn { background: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 14px; }
-        .add-prod-section { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
-        .btn-success { background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-bottom: 40px;
+        }
+
+        /* Top Header */
+        header {
+            background: #1e293b;
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-light {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-light:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-dark);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary-custom:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Main Container Layout */
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card h3 {
+            font-size: 20px;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .dashboard-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Category Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        }
+
+        /* Quick Action Section */
+        .action-flex {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-box {
+            flex: 1;
+            min-width: 280px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .action-box h4 {
+            font-size: 17px;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .action-box p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header { padding: 12px 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: space-between; }
+            .container { margin: 16px auto; padding: 0 12px; }
+            .dashboard-card { padding: 20px; }
+            .category-grid { grid-template-columns: 1fr; }
+            .action-flex { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h2>Admin Dashboard</h2>
-        <div>
-            <a href="/" class="btn-success" style="margin-right: 10px; padding: 6px 12px; font-size: 14px;">View Website</a>
-            <a href="/admin/logout" class="logout-btn">Logout</a>
+        <h2>⚡ GkpKart Admin Panel</h2>
+        <div class="header-actions">
+            <a href="/" class="btn btn-light" target="_blank">🌐 View Website</a>
+            <a href="/admin/logout" class="btn btn-danger">🚪 Logout</a>
         </div>
     </header>
 
     <div class="container">
-        <h3>Select a Category to Manage Orders & Products</h3>
-        <p>Click on any category below to open its specific 5-stage order management table and product list:</p>
+        
+        <!-- Categories Management Section -->
+        <div class="dashboard-card">
+            <h3>📂 Categories & Order Management</h3>
+            <p>Click on any category below to view its specific 5-stage order management table and product list:</p>
 
-        <div class="category-grid">
-            <a href="/admin/category/Shoes" class="category-card">Shoes</a>
-            <a href="/admin/category/Mobile Accessories" class="category-card">Mobile Accessories</a>
-            <a href="/admin/category/Small Electric Item" class="category-card">Small Electric Item</a>
-            <a href="/admin/category/Big Electric Item" class="category-card">Big Electric Item</a>
-            <a href="/admin/category/Ladies & Gents Makeup Items" class="category-card">Makeup Items</a>
+            <div class="category-grid">
+                <a href="/admin/category/Shoes" class="category-card">👟 Shoes</a>
+                <a href="/admin/category/Mobile Accessories" class="category-card">📱 Mobile Accessories</a>
+                <a href="/admin/category/Small Electric Item" class="category-card">🔌 Small Electric Item</a>
+                <a href="/admin/category/Big Electric Item" class="category-card">📺 Big Electric Item</a>
+                <a href="/admin/category/Ladies & Gents Makeup Items" class="category-card">💄 Makeup Items</a>
+            </div>
         </div>
 
-        <div class="add-prod-section">
-            <h3>Add New Product</h3>
-            <p>Upload a new product with images, videos, and assign it to a category.</p>
-            <a href="/admin/add-product" class="btn-success">Add New Product Form</a>
+        <!-- Product Management & Quick Actions -->
+        <div class="dashboard-card" style="margin-bottom: 0;">
+            <h3>📦 Product Management</h3>
+            <p>Add fresh products or manage/edit existing product listings and details.</p>
+
+            <div class="action-flex">
+                <!-- Add Product Box -->
+                <div class="action-box">
+                    <div>
+                        <h4>Add New Product</h4>
+                        <p>Upload a new product with multiple images, videos, pricing, and category selection.</p>
+                    </div>
+                    <a href="/admin/add-product" class="btn btn-success" style="width: 100%; justify-content: center;">➕ Add New Product</a>
+                </div>
+
+                <!-- Edit / Manage Products Box -->
+                <div class="action-box">
+                    <div>
+                        <h4>Edit & Manage Products</h4>
+                        <p>Modify existing product details, update prices, change stock or remove items.</p>
+                    </div>
+                    <!-- Assuming your product list/edit route is /admin/products or similar. You can adjust the link if needed -->
+                    <a href="/admin/products" class="btn btn-primary-custom" style="width: 100%; justify-content: center;">✏️ Edit / Manage Products</a>
+                </div>
+            </div>
         </div>
+
     </div>
 
 </body>
