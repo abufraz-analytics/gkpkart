@@ -5,24 +5,331 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GkpKart - Gorakhpur's Trusted Store</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; }
-        header { background: #007bff; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .logo-area { font-size: 24px; font-weight: bold; cursor: pointer; user-select: none; }
-        .nav-links { display: flex; gap: 10px; align-items: center; }
-        .hidden-btn { display: none; background: #ffc107; color: #000; padding: 8px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; }
-        .view-order-btn { background: #28a745; color: white; padding: 8px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block; }
-        .search-container { margin: 20px; text-align: center; }
-        .search-container input { padding: 10px; width: 50%; max-width: 400px; border: 1px solid #ccc; border-radius: 4px; }
-        .search-container button { padding: 10px 20px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .category-filter { text-align: center; margin-bottom: 20px; }
-        .category-filter a { margin: 0 5px; padding: 8px 15px; background: #e9ecef; color: #333; text-decoration: none; border-radius: 20px; font-size: 14px; }
-        .category-filter a.active { background: #007bff; color: white; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
-        .product-card { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .product-card img { max-width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
-        .product-card h3 { font-size: 18px; margin: 10px 0; color: #333; }
-        .product-card p { color: #d9534f; font-weight: bold; font-size: 16px; }
-        .buy-btn { display: block; margin-top: 10px; padding: 10px; background: #ff9800; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-area {
+            font-size: 26px;
+            font-weight: 800;
+            cursor: pointer;
+            user-select: none;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .logo-area:active {
+            transform: scale(0.96);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .view-order-btn {
+            background: var(--success);
+            color: white;
+            padding: 10px 18px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .view-order-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        }
+
+        .hidden-btn {
+            display: none;
+            background: var(--accent);
+            color: #111827;
+            padding: 10px 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in-out;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .hidden-btn:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Search Section */
+        .search-container {
+            margin: 28px auto 16px;
+            text-align: center;
+            padding: 0 16px;
+        }
+
+        .search-container form {
+            display: inline-flex;
+            width: 100%;
+            max-width: 550px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-container form:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            color: var(--text-main);
+            background: transparent;
+        }
+
+        .search-container button {
+            padding: 0 24px;
+            background: var(--accent);
+            color: #111827;
+            border: none;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-container button:hover {
+            background: #d97706;
+            color: white;
+        }
+
+        /* Category Filter Pills */
+        .category-filter {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 20px auto 30px;
+            padding: 0 16px;
+            max-width: 1000px;
+        }
+
+        .category-filter a {
+            padding: 8px 18px;
+            background: white;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .category-filter a:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .category-filter a.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        }
+
+        /* Products Display Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+            padding: 0 20px 40px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 0 0 12px rgba(37, 99, 235, 0.15); /* Glow & Elevation */
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #f1f5f9;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-card:hover img {
+            transform: scale(1.08); /* Smooth Zoom Effect */
+        }
+
+        .product-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 8px 0;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 44px;
+        }
+
+        .product-card p {
+            color: #e11d48;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .buy-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: var(--accent);
+            color: #111827;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .buy-btn:hover {
+            background: #d97706;
+            color: white;
+        }
+
+        .no-products {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 16px;
+            background: white;
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+        }
+
+        /* Responsive Mobile Adjustments */
+        @media (max-width: 768px) {
+            header {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+            }
+            .search-container {
+                margin: 16px auto;
+            }
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 12px;
+                padding: 0 12px 30px;
+            }
+            .product-card {
+                padding: 10px;
+            }
+            .image-wrapper {
+                height: 150px;
+            }
+            .product-card h3 {
+                font-size: 14px;
+                height: 38px;
+            }
+            .product-card p {
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -64,21 +371,27 @@
         <% if (products && products.length > 0) { %>
             <% products.forEach(product => { %>
                 <div class="product-card">
-                    <% if (product.images && product.images.length > 0) { %>
-                        <img src="<%= product.images[0] %>" alt="<%= product.title %>">
-                    <% } %>
+                    <div class="image-wrapper">
+                        <% if (product.images && product.images.length > 0) { %>
+                            <img src="<%= product.images[0] %>" alt="<%= product.title %>">
+                        <% } else { %>
+                            <img src="/placeholder.png" alt="No image">
+                        <% } %>
+                    </div>
                     <h3><%= product.title %></h3>
                     <p>₹<%= product.price %></p>
                     <a href="/product/<%= product._id %>" class="buy-btn">View Details & Buy</a>
                 </div>
             <% }) %>
         <% } else { %>
-            <p style="text-align: center; width: 100%; color: #777;">No products found.</p>
+            <div class="no-products">
+                <p>No products found matching your search or category.</p>
+            </div>
         <% } %>
     </div>
 
     <script>
-        // 4-Clicks Logic on Logo to reveal Login Buttons
+        // 4-Clicks Logic on Logo to reveal Login Buttons (Works on both Mobile & Desktop)
         let clickCount = 0;
         const logo = document.getElementById('logoClick');
         const adminBtn = document.getElementById('adminLoginBtn');
