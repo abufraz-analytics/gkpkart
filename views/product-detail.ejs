@@ -123,7 +123,7 @@
             border-radius: 6px;
         }
         
-        /* Main Preview Box - Made larger and crystal clear */
+        /* Main Preview Box */
         .main-preview-box {
             flex: 1;
             position: relative;
@@ -187,7 +187,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(0, 0, 0, 0.94);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -196,14 +196,29 @@
 
         #lightbox-content {
             position: relative;
-            max-width: 90vw;
-            max-height: 90vh;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
-        #lightbox-content img, #lightbox-content video {
+        #lightbox-content img {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            display: block;
+            cursor: grab;
+            transform-origin: center center;
+            transition: transform 0.05s ease-out;
+        }
+
+        #lightbox-content img:active {
+            cursor: grabbing;
+        }
+
+        #lightbox-content video {
             max-width: 90vw;
             max-height: 90vh;
             object-fit: contain;
@@ -451,7 +466,7 @@
         
         <div class="product-flex">
             
-            <!-- Media Gallery Section with Swipe/Slide Support -->
+            <!-- Media Gallery Section -->
             <div class="gallery-container">
                 <!-- Left Side Thumbnails -->
                 <div class="thumbnails-list">
@@ -608,7 +623,6 @@
                 displayArea.innerHTML = `<video src="${url}" controls autoplay muted style="max-width:100%; max-height:100%;"></video>`;
             }
 
-            // Update active thumbnail border
             document.querySelectorAll('.thumb-item').forEach((item, idx) => {
                 if (idx === index) {
                     item.classList.add('active');
@@ -625,11 +639,18 @@
             changeMedia(media.url, media.type, currentIndex);
         }
 
-        // Fullscreen Lightbox Functions
+        // Fullscreen Lightbox Variables & Functions
+        let scale = 1;
+        let pointX = 0;
+        let pointY = 0;
+        let isPanning = false;
+        let startX = 0, startY = 0;
+
         function openLightbox() {
             if (mediaList.length === 0) return;
             const modal = document.getElementById('lightbox-modal');
             modal.style.display = 'flex';
+            resetZoom();
             updateLightboxContent();
         }
 
@@ -640,20 +661,86 @@
         function slideLightbox(direction) {
             if (mediaList.length === 0) return;
             currentIndex = (currentIndex + direction + mediaList.length) % mediaList.length;
+            resetZoom();
             updateLightboxContent();
+        }
+
+        function resetZoom() {
+            scale = 1;
+            pointX = 0;
+            pointY = 0;
         }
 
         function updateLightboxContent() {
             const contentBox = document.getElementById('lightbox-content');
             const media = mediaList[currentIndex];
             if (media.type === 'image') {
-                contentBox.innerHTML = `<img src="${media.url}" alt="Fullscreen Image">`;
+                contentBox.innerHTML = `<img id="lightboxImg" src="${media.url}" alt="Fullscreen Image" style="transform: translate(${pointX}px, ${pointY}px) scale(${scale});">`;
+                setupZoomAndPan();
             } else {
                 contentBox.innerHTML = `<video src="${media.url}" controls autoplay style="max-width:90vw; max-height:90vh;"></video>`;
             }
         }
 
-        // Touch & Mouse Swipe / Slide Support for Main Preview Box
+        function setTransform(img) {
+            img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+        }
+
+        function setupZoomAndPan() {
+            const img = document.getElementById('lightboxImg');
+            if (!img) return;
+
+            // Mouse Wheel Zoom on Cursor Position
+            img.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const xs = (e.clientX - pointX) / scale;
+                const ys = (e.clientY - pointY) / scale;
+                
+                const delta = e.deltaY < 0 ? 1.15 : 0.85;
+                let newScale = scale * delta;
+
+                // Limit min & max zoom
+                if (newScale < 1) {
+                    newScale = 1;
+                    pointX = 0;
+                    pointY = 0;
+                } else if (newScale > 5) {
+                    newScale = 5;
+                }
+
+                if (newScale > 1) {
+                    pointX = e.clientX - xs * newScale;
+                    pointY = e.clientY - ys * newScale;
+                }
+
+                scale = newScale;
+                setTransform(img);
+            }, {passive: false});
+
+            // Click & Drag (Pan) Support
+            img.addEventListener('mousedown', (e) => {
+                if (scale === 1) return; // Don't pan if not zoomed
+                isPanning = true;
+                startX = e.clientX - pointX;
+                startY = e.clientY - pointY;
+                img.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                e.preventDefault();
+                pointX = e.clientX - startX;
+                pointY = e.clientY - startY;
+                setTransform(img);
+            });
+
+            window.addEventListener('mouseup', () => {
+                isPanning = false;
+                if(img) img.style.cursor = scale > 1 ? 'grab' : 'default';
+            });
+        }
+
+        // Touch Swipe Support for main preview box
         const mainBox = document.getElementById('mainPreviewBox');
         let touchStartX = 0;
         let touchEndX = 0;
@@ -664,40 +751,10 @@
 
         mainBox.addEventListener('touchend', (e) => {
             touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, {passive: true});
-
-        // Mouse drag swipe support for desktop
-        let isDragging = false;
-        let startX = 0;
-
-        mainBox.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-        });
-
-        mainBox.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            let diffX = e.clientX - startX;
-            if (Math.abs(diffX) > 50) {
-                if (diffX > 0) {
-                    slideMedia(-1); // Swipe Right -> Prev
-                } else {
-                    slideMedia(1);  // Swipe Left -> Next
-                }
-            }
-        });
-
-        function handleSwipe() {
             let threshold = 50;
-            if (touchEndX < touchStartX - threshold) {
-                slideMedia(1); // Swipe Left -> Next image
-            }
-            if (touchEndX > touchStartX + threshold) {
-                slideMedia(-1); // Swipe Right -> Prev image
-            }
-        }
+            if (touchEndX < touchStartX - threshold) slideMedia(1);
+            if (touchEndX > touchStartX + threshold) slideMedia(-1);
+        }, {passive: true});
     </script>
 </body>
 </html>
