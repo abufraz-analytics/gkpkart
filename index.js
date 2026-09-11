@@ -86,7 +86,7 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// Handle Order Submission with Secret Key Generation
+// Handle Order Submission with Secret Key Generation & Browser LocalStorage saving
 app.post('/order/:id', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress } = req.body;
@@ -112,9 +112,14 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
+        // Browser ke local storage mein order ID save karne ki script
         res.send(`
             <script>
-                alert('Order Placed Successfully! Save your order info.');
+                let myOrders = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
+                myOrders.push("${newOrder._id}");
+                localStorage.setItem('gkp_my_orders', JSON.stringify(myOrders));
+
+                alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
                 window.location.href = '/view-orders';
             </script>
         `);
@@ -131,6 +136,21 @@ app.get('/view-orders', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
+    }
+});
+
+// API Route to fetch specific browser orders for customer tracking
+app.post('/api/customer-orders', async (req, res) => {
+    try {
+        const { orderIds } = req.body;
+        if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+            return res.json([]);
+        }
+        const orders = await Order.find({ _id: { $in: orderIds } }).populate('product').sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server Error' });
     }
 });
 
@@ -416,7 +436,7 @@ app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// MANAGE / EDIT PRODUCTS LIST ROUTE (Fixes Cannot GET /admin/products)
+// MANAGE / EDIT PRODUCTS LIST ROUTE
 app.get('/admin/products', isAdminLoggedIn, async (req, res) => {
     try {
         let searchQuery = req.query.search ? req.query.search.trim() : '';
@@ -445,7 +465,7 @@ app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
         if (!product) {
             return res.redirect('/admin/dashboard');
         }
-        res.render('admin/edit-product-form', { product }); // Note: Ensure your single product form template is named accordingly or keep edit-product if handled via form
+        res.render('admin/edit-product-form', { product });
     } catch (err) {
         console.error('Error fetching product for edit:', err.message);
         res.redirect('/admin/dashboard');
