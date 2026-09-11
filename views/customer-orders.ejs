@@ -11,6 +11,13 @@
         h2 { margin-top: 0; color: #007bff; }
         .back-btn { background: #6c757d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 14px; }
         .info-box { background: #e9ecef; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+        
+        /* Order Card Styling */
+        .order-card { background: #fff; border: 1px solid #ddd; border-left: 5px solid #007bff; padding: 15px; margin-bottom: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .order-card.Delivered { border-left-color: #28a745; }
+        .order-card.Canceled { border-left-color: #dc3545; }
+        .order-card p { margin: 8px 0; font-size: 14px; }
+        .secret-box { background: #fff3cd; padding: 6px 12px; border: 1px dashed #ffeeba; color: #856404; font-weight: bold; border-radius: 4px; display: inline-block; font-size: 16px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -26,11 +33,77 @@
             <p><strong>Note:</strong> Aapke orders ki list aur unka <strong>Secret Key</strong> yahan dikhta hai. Jab delivery boy aapke paas item lekar aayega, toh delivery complete karne ke liye aapko apna 4-digit secret key delivery boy ko batana hoga.</p>
         </div>
         
-        <p style="color: #666;">Aapne jo bhi orders is browser se place kiye hain, woh admin ke paas process hone ke liye chale gaye hain. Aap kisi bhi samay homepage par jakar naye products explore kar sakte hain!</p>
+        <!-- Dynamic Orders Container -->
+        <div id="ordersContainer">
+            <p style="text-align: center; color: #666;">Loading your orders from this browser...</p>
+        </div>
         
         <br>
-        <a href="/" style="background: #ff9800; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Continue Shopping</a>
+        <a href="/" style="background: #ff9800; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Continue Shopping</a>
     </div>
+
+    <script>
+        async function fetchMyOrders() {
+            let savedIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
+            const container = document.getElementById('ordersContainer');
+
+            if (savedIds.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #777; padding: 15px;">Aapne is browser se abhi tak koi order place nahi kiya hai.</p>';
+                return;
+            }
+
+            try {
+                let response = await fetch('/api/customer-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: savedIds })
+                });
+
+                let orders = await response.json();
+
+                if (orders.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #777; padding: 15px;">No active orders found.</p>';
+                    return;
+                }
+
+                let html = '';
+                orders.forEach(order => {
+                    let productTitle = order.product ? order.product.title : 'Product Removed';
+                    let productPrice = order.product ? '₹' + order.product.price : '';
+                    let productImg = (order.product && order.product.images && order.product.images.length > 0) ? order.product.images[0] : '';
+
+                    html += `
+                        <div class="order-card ${order.orderStatus}">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                ${productImg ? `<img src="${productImg}" alt="Product" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">` : ''}
+                                <div style="flex-grow: 1;">
+                                    <h4 style="margin: 0 0 5px 0; color: #333;">${productTitle}</h4>
+                                    <span style="color: #d9534f; font-weight: bold;">${productPrice}</span>
+                                </div>
+                            </div>
+                            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+                            <p><strong>Customer Name:</strong> ${order.customerName}</p>
+                            <p><strong>Phone:</strong> ${order.phone}</p>
+                            <p><strong>Delivery Address:</strong> ${order.location}</p>
+                            <p><strong>Order Status:</strong> <span style="color: #007bff; font-weight: bold;">${order.orderStatus}</span></p>
+                            
+                            ${order.orderStatus !== 'Delivered' && order.orderStatus !== 'Canceled' ? `
+                                <p style="margin-top: 10px;"><strong>Secret Code for Delivery Boy:</strong><br>
+                                <span class="secret-box">${order.secretKey}</span></p>
+                            ` : `<p style="color: #28a745; font-weight: bold; margin-top: 10px;">✔ This order has been successfully delivered!</p>`}
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<p style="text-align: center; color: red;">Failed to load orders.</p>';
+            }
+        }
+
+        fetchMyOrders();
+    </script>
 
 </body>
 </html>
