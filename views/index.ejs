@@ -3,96 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GkpKart - Gorakhpur's Trusted Store</title>
+    <title>Admin Dashboard - GkpKart</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; }
-        header { background: #007bff; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .logo-area { font-size: 24px; font-weight: bold; cursor: pointer; user-select: none; }
-        .nav-links { display: flex; gap: 10px; align-items: center; }
-        .hidden-btn { display: none; background: #ffc107; color: #000; padding: 8px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; }
-        .view-order-btn { background: #28a745; color: white; padding: 8px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block; }
-        .search-container { margin: 20px; text-align: center; }
-        .search-container input { padding: 10px; width: 50%; max-width: 400px; border: 1px solid #ccc; border-radius: 4px; }
-        .search-container button { padding: 10px 20px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .category-filter { text-align: center; margin-bottom: 20px; }
-        .category-filter a { margin: 0 5px; padding: 8px 15px; background: #e9ecef; color: #333; text-decoration: none; border-radius: 20px; font-size: 14px; }
-        .category-filter a.active { background: #007bff; color: white; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
-        .product-card { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .product-card img { max-width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
-        .product-card h3 { font-size: 18px; margin: 10px 0; color: #333; }
-        .product-card p { color: #d9534f; font-weight: bold; font-size: 16px; }
-        .buy-btn { display: block; margin-top: 10px; padding: 10px; background: #ff9800; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 1200px; margin: 10px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .header-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        h2 { margin: 0; color: #333; font-size: 22px; }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { display: inline-block; padding: 10px 15px; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; border: none; cursor: pointer; text-align: center; }
+        .btn-primary { background: #007bff; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .btn-warning:hover { background: #e0a800; }
+
+        /* Responsive Grid & Tables */
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .category-card { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .category-card h4 { margin: 0 0 10px 0; font-size: 16px; color: #444; }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; background: white; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #f1f3f5; color: #333; }
+        img.thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+
+        @media (max-width: 480px) {
+            body { padding: 5px; }
+            .container { padding: 10px; }
+            .header-flex { flex-direction: column; align-items: stretch; text-align: center; }
+            .btn-group { justify-content: center; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <!-- Logo with 4-click trigger for Admin & Delivery Logins -->
-        <div class="logo-area" id="logoClick">🛒 GkpKart</div>
-
-        <div class="nav-links">
-            <!-- View Your Order (Always Visible, Local Tracking) -->
-            <a href="/view-orders" class="view-order-btn">View Your Order</a>
-
-            <!-- Hidden Login Buttons (Revealed after 4 clicks on Logo) -->
-            <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Login Delivery</a>
-            <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Login Admin</a>
+    <div class="container">
+        <!-- Header with Logout and Manage Products Button -->
+        <div class="header-flex">
+            <h2>Welcome, Admin 🚀</h2>
+            <div class="btn-group">
+                <a href="/admin/manage-products" class="btn btn-warning">manage product (edit / delete)</a>
+                <a href="/admin/add-product" class="btn btn-success">+ Add New Product</a>
+                <a href="/admin/logout" class="btn btn-danger">Logout</a>
+            </div>
         </div>
-    </header>
 
-    <!-- Search Section -->
-    <div class="search-container">
-        <form action="/" method="GET">
-            <input type="text" name="search" placeholder="Search for mobiles, electronics, shoes..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
-            <button type="submit">Search</button>
-        </form>
-    </div>
-
-    <!-- Category Filter Pills -->
-    <div class="category-filter">
-        <a href="/" class="<%= !selectedCategory ? 'active' : '' %>">All Products</a>
-        <a href="/?category=Shoes" class="<%= selectedCategory === 'Shoes' ? 'active' : '' %>">Shoes</a>
-        <a href="/?category=Mobile Accessories" class="<%= selectedCategory === 'Mobile Accessories' ? 'active' : '' %>">Mobile Accessories</a>
-        <a href="/?category=Small Electric Item" class="<%= selectedCategory === 'Small Electric Item' ? 'active' : '' %>">Small Electric Item</a>
-        <a href="/?category=Big Electric Item" class="<%= selectedCategory === 'Big Electric Item' ? 'active' : '' %>">Big Electric Item</a>
-        <a href="/?category=Ladies & Gents Makeup Items" class="<%= selectedCategory === 'Ladies & Gents Makeup Items' ? 'active' : '' %>">Makeup Items</a>
-    </div>
-
-    <!-- Products Display Grid -->
-    <div class="products-grid">
-        <% if (products && products.length > 0) { %>
-            <% products.forEach(product => { %>
-                <div class="product-card">
-                    <% if (product.images && product.images.length > 0) { %>
-                        <img src="<%= product.images[0] %>" alt="<%= product.title %>">
-                    <% } %>
-                    <h3><%= product.title %></h3>
-                    <p>₹<%= product.price %></p>
-                    <a href="/product/<%= product._id %>" class="buy-btn">View Details & Buy</a>
+        <!-- Quick Category Shortcuts Section -->
+        <div style="margin-bottom: 30px;">
+            <h3>Manage By Categories</h3>
+            <div class="category-grid">
+                <div class="category-card">
+                    <h4>Shoes</h4>
+                    <a href="/admin/category/Shoes" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Open</a>
                 </div>
-            <% }) %>
-        <% } else { %>
-            <p style="text-align: center; width: 100%; color: #777;">No products found.</p>
-        <% } %>
+                <div class="category-card">
+                    <h4>Mobile Accessories</h4>
+                    <a href="/admin/category/Mobile Accessories" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Open</a>
+                </div>
+                <div class="category-card">
+                    <h4>Small Electric Item</h4>
+                    <a href="/admin/category/Small Electric Item" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Open</a>
+                </div>
+                <div class="category-card">
+                    <h4>Big Electric Item</h4>
+                    <a href="/admin/category/Big Electric Item" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Open</a>
+                </div>
+                <div class="category-card">
+                    <h4>Makeup Items</h4>
+                    <a href="/admin/category/Ladies & Gents Makeup Items" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Open</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Products Overview Section -->
+        <div>
+            <h3>All Products Overview</h3>
+            <% if (products && products.length > 0) { %>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% products.forEach(product => { %>
+                                <tr>
+                                    <td>
+                                        <% if (product.images && product.images.length > 0) { %>
+                                            <img src="<%= product.images[0] %>" alt="Img" class="thumb">
+                                        <% } else { %>
+                                            <span>No Image</span>
+                                        <% } %>
+                                    </td>
+                                    <td><strong><%= product.title %></strong></td>
+                                    <td><%= product.category %></td>
+                                    <td>₹<%= product.price %></td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <a href="/admin/edit-product/<%= product._id %>" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</a>
+                                            <form action="/admin/delete-product/<%= product._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                                <button type="submit" class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <p style="color: #666;">No products uploaded yet.</p>
+            <% } %>
+        </div>
+
     </div>
 
-    <script>
-        // 4-Clicks Logic on Logo to reveal Login Buttons
-        let clickCount = 0;
-        const logo = document.getElementById('logoClick');
-        const adminBtn = document.getElementById('adminLoginBtn');
-        const deliveryBtn = document.getElementById('deliveryLoginBtn');
-
-        logo.addEventListener('click', () => {
-            clickCount++;
-            if (clickCount >= 4) {
-                adminBtn.style.display = 'inline-block';
-                deliveryBtn.style.display = 'inline-block';
-                alert('Admin & Delivery Login unlocked!');
-                clickCount = 0;
-            }
-        });
-    </script>
 </body>
 </html>
