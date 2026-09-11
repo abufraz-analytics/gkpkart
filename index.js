@@ -376,6 +376,16 @@ app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
 
 // ================= PRODUCT CRUD ROUTES =================
 
+// ADD PRODUCT - GET ROUTE (Render Add Product Form)
+app.get('/admin/add-product', isAdminLoggedIn, (req, res) => {
+    try {
+        res.render('admin/add-product');
+    } catch (err) {
+        console.error('Error rendering add product page:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
 app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
     { name: 'images', maxCount: 10 },
     { name: 'videos', maxCount: 5 }
