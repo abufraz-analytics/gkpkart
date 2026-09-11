@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Dashboard - GkpKart</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
+        header { background: #ff9800; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 15px; }
+        .logout-btn { background: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 14px; }
+        th { background: #343a40; color: white; }
+        .input-key { padding: 6px; width: 100px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .complete-btn { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .complete-btn:hover { background: #218838; }
+    </style>
+</head>
+<body>
 
+    <header>
+        <h2>Delivery Boy Dashboard (ID: <%= deliveryBoyId %>)</h2>
+        <a href="/delivery/logout" class="logout-btn">Logout</a>
+    </header>
+
+    <div class="container">
+        <h3>Assigned Orders (Out For Delivery)</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>S.N.</th>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                    <th>Customer Name</th>
+                    <th>Phone No.</th>
+                    <th>Location / Address</th>
+                    <th>Enter Customer Secret Key</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (orders && orders.length > 0) { %>
+                    <% orders.forEach((order, index) => { %>
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><%= order.product ? order.product.title : 'N/A' %></td>
+                            <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
+                            <td><%= order.customerName %></td>
+                            <td><%= order.phone %></td>
+                            <td><%= order.location %></td>
+                            <td>
+                                <form action="/delivery/complete-order/<%= order._id %>" method="POST" style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                                    <input type="text" name="enteredKey" placeholder="4-digit key" class="input-key" required>
+                                    <button type="submit" class="complete-btn">Deliver</button>
+                                </form>
+                            </td>
+                            <td style="color: #007bff; font-weight: bold;">Pending Verification</td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="8" style="text-align: center; color: #777; padding: 20px;">No assigned orders found right now.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
