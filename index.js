@@ -86,7 +86,7 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// Handle Order Submission with Secret Key Generation & Browser LocalStorage saving
+// Handle Order Submission with Secret Key Generation & Browser LocalStorage saving (Updated for multiple orders persistence)
 app.post('/order/:id', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress } = req.body;
@@ -112,12 +112,28 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
-        // Browser ke local storage mein order ID save karne ki script
+        // Updated browser local storage sync script to support multiple orders without overlapping
         res.send(`
             <script>
-                let myOrders = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
-                myOrders.push("${newOrder._id}");
-                localStorage.setItem('gkp_my_orders', JSON.stringify(myOrders));
+                let currentTime = new Date().getTime();
+                
+                // Fetch existing time-stamped orders array
+                let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
+                
+                // Fallback for old simple storage format if it exists
+                if (savedOrdersData.length === 0) {
+                    let oldIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
+                    if (oldIds.length > 0) {
+                        savedOrdersData = oldIds.map(id => ({ id: id, completedAt: null }));
+                    }
+                }
+
+                // Add the new order ID with null completedAt
+                savedOrdersData.push({ id: "${newOrder._id}", completedAt: null });
+
+                // Save both updated formats back to localStorage
+                localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
+                localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
 
                 alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
                 window.location.href = '/view-orders';
