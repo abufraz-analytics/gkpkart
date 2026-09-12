@@ -62,7 +62,9 @@
             }
 
             try {
-                let orderIds = savedOrdersData.map(item => item.id);
+                // Extract all unique order IDs
+                let orderIds = [...new Set(savedOrdersData.map(item => item.id))];
+
                 let response = await fetch('/api/customer-orders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -71,7 +73,7 @@
 
                 let orders = await response.json();
 
-                if (orders.length === 0) {
+                if (!orders || orders.length === 0) {
                     container.innerHTML = '<p style="text-align: center; color: #777; padding: 15px;">No active orders found.</p>';
                     return;
                 }
@@ -138,9 +140,8 @@
                     `;
                 });
 
-                // Update localStorage with filtered 48-hour list
+                // Update localStorage with filtered list including multiple orders support
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(updatedSavedOrdersData));
-                // Keep backward compatibility for 'gkp_my_orders'
                 localStorage.setItem('gkp_my_orders', JSON.stringify(updatedSavedOrdersData.map(item => item.id)));
 
                 if (html === '') {
