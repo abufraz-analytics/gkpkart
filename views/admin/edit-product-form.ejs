@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product - GkpKart Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #007bff; margin-top: 0; margin-bottom: 20px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        textarea { resize: vertical; height: 100px; }
+        .btn { background: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
+        .btn:hover { background: #218838; }
+        .back-link { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #007bff; font-size: 14px; }
+        .current-imgs { display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
+        .current-imgs img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Edit Product Details</h2>
+        
+        <form action="/admin/edit-product/<%= product._id %>" method="POST" enctype="multipart/form-data">
+            
+            <div class="form-group">
+                <label>Product Title:</label>
+                <input type="text" name="title" value="<%= product.title %>" required>
+            </div>
+
+            <div class="form-group">
+                <label>Brand Name:</label>
+                <input type="text" name="brand" value="<%= product.brand %>">
+            </div>
+
+            <div class="form-group">
+                <label>Price (₹):</label>
+                <input type="number" name="price" value="<%= product.price %>" required>
+            </div>
+
+            <div class="form-group">
+                <label>Category:</label>
+                <select name="category" required>
+                    <option value="Electronics" <%= product.category === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+                    <option value="Clothing" <%= product.category === 'Clothing' ? 'selected' : '' %>>Clothing</option>
+                    <option value="Footwear" <%= product.category === 'Footwear' ? 'selected' : '' %>>Footwear</option>
+                    <option value="Grocery" <%= product.category === 'Grocery' ? 'selected' : '' %>>Grocery</option>
+                    <option value="Home & Kitchen" <%= product.category === 'Home & Kitchen' ? 'selected' : '' %>>Home & Kitchen</option>
+                    <option value="Other" <%= product.category === 'Other' ? 'selected' : '' %>>Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea name="description" required><%= product.description %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>WhatsApp Number (for direct order/chat):</label>
+                <input type="text" name="whatsappNumber" value="<%= product.whatsappNumber || '' %>">
+            </div>
+
+            <div class="form-group">
+                <label>Return Policy:</label>
+                <input type="text" name="returnPolicy" value="<%= product.returnPolicy || '7 Days Replacement Policy' %>">
+            </div>
+
+            <div class="form-group">
+                <label>Current Images:</label>
+                <div class="current-imgs">
+                    <% if (product.images && product.images.length > 0) { %>
+                        <% product.images.forEach(img => { %>
+                            <img src="<%= img %>" alt="Product Image">
+                        <% }) %>
+                    <% } else { %>
+                        <p style="font-size: 12px; color: #777;">No images uploaded</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Upload New Images (Optional - will replace existing):</label>
+                <input type="file" name="images" multiple accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label>Upload New Videos (Optional):</label>
+                <input type="file" name="videos" multiple accept="video/*">
+            </div>
+
+            <button type="submit" class="btn">Update Product</button>
+        </form>
+
+        <a href="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
+    </div>
+
+</body>
+</html>
