@@ -30,7 +30,7 @@
     <div class="container">
         <h3>Your Placed Orders</h3>
         <div class="info-box">
-            <p><strong>Note:</strong> Aapke orders ki list aur unka <strong>Secret Key</strong> yahan dikhta hai. Jab delivery boy aapke paas item lekar aayega, toh delivery complete karne ke liye aapko apna 4-digit secret key delivery boy ko batana hoga.</p>
+            <p><strong>Note:</strong> Your active order and 4-digit secret key are shown here. Share this key with the delivery boy upon arrival to complete delivery. To cancel your order, please WhatsApp us at: +917607937973</p>
         </div>
         
         <!-- Dynamic Orders Container -->
@@ -44,19 +44,29 @@
 
     <script>
         async function fetchMyOrders() {
-            let savedIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
+            let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
+            
+            // Fallback for old storage format if needed
+            if (savedOrdersData.length === 0) {
+                let oldIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
+                if (oldIds.length > 0) {
+                    savedOrdersData = oldIds.map(id => ({ id: id, completedAt: null }));
+                }
+            }
+
             const container = document.getElementById('ordersContainer');
 
-            if (savedIds.length === 0) {
+            if (savedOrdersData.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #777; padding: 15px;">Aapne is browser se abhi tak koi order place nahi kiya hai.</p>';
                 return;
             }
 
             try {
+                let orderIds = savedOrdersData.map(item => item.id);
                 let response = await fetch('/api/customer-orders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderIds: savedIds })
+                    body: JSON.stringify({ orderIds: orderIds })
                 });
 
                 let orders = await response.json();
@@ -66,11 +76,47 @@
                     return;
                 }
 
+                let currentTime = new Date().getTime();
+                let updatedSavedOrdersData = [];
                 let html = '';
+
                 orders.forEach(order => {
+                    let savedItem = savedOrdersData.find(item => item.id === order._id);
+                    let completedAt = savedItem ? savedItem.completedAt : null;
+
+                    // If order is Delivered or Canceled
+                    if (order.orderStatus === 'Delivered' || order.orderStatus === 'Canceled') {
+                        if (!completedAt) {
+                            completedAt = currentTime;
+                        }
+                        // Check if 48 hours (48 * 60 * 60 * 1000 ms) have passed
+                        let hoursPassed = (currentTime - completedAt) / (1000 * 60 * 60);
+                        if (hoursPassed < 48) {
+                            updatedSavedOrdersData.push({ id: order._id, completedAt: completedAt });
+                        } else {
+                            // Skip adding to updated list so it gets removed after 48 hours
+                            return; 
+                        }
+                    } else {
+                        // Active orders stay in storage
+                        updatedSavedOrdersData.push({ id: order._id, completedAt: null });
+                    }
+
                     let productTitle = order.product ? order.product.title : 'Product Removed';
                     let productPrice = order.product ? '₹' + order.product.price : '';
                     let productImg = (order.product && order.product.images && order.product.images.length > 0) ? order.product.images[0] : '';
+
+                    let statusMessageHtml = '';
+                    if (order.orderStatus === 'Delivered') {
+                        statusMessageHtml = `<p style="color: #28a745; font-weight: bold; margin-top: 10px;">✔ This order has been successfully delivered!</p>`;
+                    } else if (order.orderStatus === 'Canceled') {
+                        statusMessageHtml = `<p style="color: #dc3545; font-weight: bold; margin-top: 10px;">✔ This order has been canceled.</p>`;
+                    } else {
+                        statusMessageHtml = `
+                            <p style="margin-top: 10px;"><strong>Secret Code for Delivery Boy:</strong><br>
+                            <span class="secret-box">${order.secretKey}</span></p>
+                        `;
+                    }
 
                     html += `
                         <div class="order-card ${order.orderStatus}">
@@ -87,15 +133,22 @@
                             <p><strong>Delivery Address:</strong> ${order.location}</p>
                             <p><strong>Order Status:</strong> <span style="color: #007bff; font-weight: bold;">${order.orderStatus}</span></p>
                             
-                            ${order.orderStatus !== 'Delivered' && order.orderStatus !== 'Canceled' ? `
-                                <p style="margin-top: 10px;"><strong>Secret Code for Delivery Boy:</strong><br>
-                                <span class="secret-box">${order.secretKey}</span></p>
-                            ` : `<p style="color: #28a745; font-weight: bold; margin-top: 10px;">✔ This order has been successfully delivered!</p>`}
+                            ${statusMessageHtml}
                         </div>
                     `;
                 });
 
-                container.innerHTML = html;
+                // Update localStorage with filtered 48-hour list
+                localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(updatedSavedOrdersData));
+                // Keep backward compatibility for 'gkp_my_orders'
+                localStorage.setItem('gkp_my_orders', JSON.stringify(updatedSavedOrdersData.map(item => item.id)));
+
+                if (html === '') {
+                    container.innerHTML = '<p style="text-align: center; color: #777; padding: 15px;">Aapne is browser se abhi tak koi active order nahi kiya hai.</p>';
+                } else {
+                    container.innerHTML = html;
+                }
+
             } catch (err) {
                 console.error(err);
                 container.innerHTML = '<p style="text-align: center; color: red;">Failed to load orders.</p>';
