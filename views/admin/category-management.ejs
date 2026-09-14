@@ -311,7 +311,8 @@
                             <th>S.N.</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Price</th>
+                            <th>Price / Details</th>
+                            <th>Total Amount</th>
                             <th>Product Name</th>
                             <th>Product Image</th>
                             <th>Customer Name</th>
@@ -329,10 +330,36 @@
                                     <td><%= index + 1 %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                     <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
-                                    <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
                                     <td>
-                                        <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div>₹<%= item.price %> (x<%= item.quantity || 1 %>)</div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            ₹<%= order.product ? order.product.price : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight: 700; color: var(--primary);">
+                                        ₹<%= order.totalAmount || (order.product ? order.product.price : 0) %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div><%= item.title || (item.product ? item.product.title : 'N/A') %></div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <%= order.product ? order.product.title : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <% let imgUrl = item.image || (item.product && item.product.images ? item.product.images[0] : null); %>
+                                                <% if (imgUrl) { %>
+                                                    <img src="<%= imgUrl %>" width="40" height="40" style="object-fit:cover; margin:2px;">
+                                                <% } %>
+                                            <% }) %>
+                                        <% } else if (order.product && order.product.images && order.product.images.length > 0) { %>
                                             <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
                                         <% } %>
                                     </td>
@@ -355,7 +382,7 @@
                                 </tr>
                             <% }) %>
                         <% } else { %>
-                            <tr><td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">No new orders found.</td></tr>
+                            <tr><td colspan="13" style="text-align: center; color: #64748b; padding: 24px;">No new orders found.</td></tr>
                         <% } %>
                     </tbody>
                 </table>
@@ -380,7 +407,8 @@
                             <th>S.N.</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Price</th>
+                            <th>Price / Details</th>
+                            <th>Total Amount</th>
                             <th>Product Name</th>
                             <th>Product Image</th>
                             <th>Customer Name</th>
@@ -400,10 +428,36 @@
                                     <td><%= index + 1 %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                     <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
-                                    <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
                                     <td>
-                                        <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div>₹<%= item.price %> (x<%= item.quantity || 1 %>)</div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            ₹<%= order.product ? order.product.price : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight: 700; color: var(--primary);">
+                                        ₹<%= order.totalAmount || (order.product ? order.product.price : 0) %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div><%= item.title || (item.product ? item.product.title : 'N/A') %></div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <%= order.product ? order.product.title : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <% let imgUrl = item.image || (item.product && item.product.images ? item.product.images[0] : null); %>
+                                                <% if (imgUrl) { %>
+                                                    <img src="<%= imgUrl %>" width="40" height="40" style="object-fit:cover; margin:2px;">
+                                                <% } %>
+                                            <% }) %>
+                                        <% } else if (order.product && order.product.images && order.product.images.length > 0) { %>
                                             <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
                                         <% } %>
                                     </td>
@@ -437,7 +491,7 @@
                                 </tr>
                             <% }) %>
                         <% } else { %>
-                            <tr><td colspan="14" style="text-align: center; color: #64748b; padding: 24px;">No packed orders found.</td></tr>
+                            <tr><td colspan="15" style="text-align: center; color: #64748b; padding: 24px;">No packed orders found.</td></tr>
                         <% } %>
                     </tbody>
                 </table>
@@ -462,7 +516,8 @@
                             <th>S.N.</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Price</th>
+                            <th>Price / Details</th>
+                            <th>Total Amount</th>
                             <th>Product Name</th>
                             <th>Product Image</th>
                             <th>Customer Name</th>
@@ -482,10 +537,36 @@
                                     <td><%= index + 1 %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                     <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
-                                    <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
                                     <td>
-                                        <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div>₹<%= item.price %> (x<%= item.quantity || 1 %>)</div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            ₹<%= order.product ? order.product.price : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight: 700; color: var(--primary);">
+                                        ₹<%= order.totalAmount || (order.product ? order.product.price : 0) %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div><%= item.title || (item.product ? item.product.title : 'N/A') %></div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <%= order.product ? order.product.title : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <% let imgUrl = item.image || (item.product && item.product.images ? item.product.images[0] : null); %>
+                                                <% if (imgUrl) { %>
+                                                    <img src="<%= imgUrl %>" width="40" height="40" style="object-fit:cover; margin:2px;">
+                                                <% } %>
+                                            <% }) %>
+                                        <% } else if (order.product && order.product.images && order.product.images.length > 0) { %>
                                             <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
                                         <% } %>
                                     </td>
@@ -511,7 +592,7 @@
                                 </tr>
                             <% }) %>
                         <% } else { %>
-                            <tr><td colspan="14" style="text-align: center; color: #64748b; padding: 24px;">No orders out for delivery.</td></tr>
+                            <tr><td colspan="15" style="text-align: center; color: #64748b; padding: 24px;">No orders out for delivery.</td></tr>
                         <% } %>
                     </tbody>
                 </table>
@@ -536,7 +617,8 @@
                             <th>S.N.</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Price</th>
+                            <th>Price / Details</th>
+                            <th>Total Amount</th>
                             <th>Product Name</th>
                             <th>Product Image</th>
                             <th>Customer Name</th>
@@ -553,10 +635,36 @@
                                     <td><%= index + 1 %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                     <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
-                                    <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
                                     <td>
-                                        <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div>₹<%= item.price %> (x<%= item.quantity || 1 %>)</div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            ₹<%= order.product ? order.product.price : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight: 700; color: var(--primary);">
+                                        ₹<%= order.totalAmount || (order.product ? order.product.price : 0) %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div><%= item.title || (item.product ? item.product.title : 'N/A') %></div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <%= order.product ? order.product.title : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <% let imgUrl = item.image || (item.product && item.product.images ? item.product.images[0] : null); %>
+                                                <% if (imgUrl) { %>
+                                                    <img src="<%= imgUrl %>" width="40" height="40" style="object-fit:cover; margin:2px;">
+                                                <% } %>
+                                            <% }) %>
+                                        <% } else if (order.product && order.product.images && order.product.images.length > 0) { %>
                                             <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
                                         <% } %>
                                     </td>
@@ -572,7 +680,7 @@
                                 </tr>
                             <% }) %>
                         <% } else { %>
-                            <tr><td colspan="11" style="text-align: center; color: #64748b; padding: 24px;">No delivered items found.</td></tr>
+                            <tr><td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">No delivered items found.</td></tr>
                         <% } %>
                     </tbody>
                 </table>
@@ -597,7 +705,8 @@
                             <th>S.N.</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Price</th>
+                            <th>Price / Details</th>
+                            <th>Total Amount</th>
                             <th>Product Name</th>
                             <th>Product Image</th>
                             <th>Customer Name</th>
@@ -615,10 +724,36 @@
                                     <td><%= index + 1 %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                     <td><%= new Date(order.createdAt).toLocaleTimeString() %></td>
-                                    <td>₹<%= order.product ? order.product.price : 'N/A' %></td>
-                                    <td><%= order.product ? order.product.title : 'N/A' %></td>
                                     <td>
-                                        <% if (order.product && order.product.images && order.product.images.length > 0) { %>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div>₹<%= item.price %> (x<%= item.quantity || 1 %>)</div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            ₹<%= order.product ? order.product.price : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight: 700; color: var(--primary);">
+                                        ₹<%= order.totalAmount || (order.product ? order.product.price : 0) %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <div><%= item.title || (item.product ? item.product.title : 'N/A') %></div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <%= order.product ? order.product.title : 'N/A' %>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (order.items && order.items.length > 0) { %>
+                                            <% order.items.forEach(item => { %>
+                                                <% let imgUrl = item.image || (item.product && item.product.images ? item.product.images[0] : null); %>
+                                                <% if (imgUrl) { %>
+                                                    <img src="<%= imgUrl %>" width="40" height="40" style="object-fit:cover; margin:2px;">
+                                                <% } %>
+                                            <% }) %>
+                                        <% } else if (order.product && order.product.images && order.product.images.length > 0) { %>
                                             <img src="<%= order.product.images[0] %>" width="40" height="40" style="object-fit:cover;">
                                         <% } %>
                                     </td>
@@ -635,7 +770,7 @@
                                 </tr>
                             <% }) %>
                         <% } else { %>
-                            <tr><td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">No canceled items found.</td></tr>
+                            <tr><td colspan="13" style="text-align: center; color: #64748b; padding: 24px;">No canceled items found.</td></tr>
                         <% } %>
                     </tbody>
                 </table>
