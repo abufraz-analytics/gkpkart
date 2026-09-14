@@ -437,7 +437,13 @@
         function checkoutCart() {
             let cart = getCart();
             if (cart.length === 0) return;
-            alert('Proceeding to checkout with ' + cart.length + ' items. Total value calculated successfully!');
+            
+            // Cart items ko secure localStorage me lock rakhte hue checkout data prepare karna
+            // Aap chahe toh ise apne checkout/order form page par redirect kar sakte hain ya bulk order endpoint par bhej sakte hain
+            localStorage.setItem('gkp_checkout_items', JSON.stringify(cart));
+            
+            // Single ya Multiple (Bulk) order flow ke liye yahan redirect ya action trigger hoga
+            window.location.href = '/checkout'; 
         }
 
         // --- Order Tracking Logic ---
