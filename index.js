@@ -254,10 +254,11 @@ app.post('/order/:id', async (req, res) => {
     }
 });
 
-// Customer View Orders Page
+// ✅ NEW ROUTE: Do NOT sync server cart - use only localStorage
 app.get('/view-orders', async (req, res) => {
     try {
-        res.render('customer-orders', { cart: req.session.cart });
+        // Send EMPTY cart object - frontend will use localStorage instead
+        res.render('customer-orders', { cart: null });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
