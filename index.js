@@ -151,6 +151,7 @@ app.post('/order/:id', async (req, res) => {
         let orderItems = [];
         let calculatedTotal = 0;
         let orderCategory = '';
+        let isCartCheckout = false; // ✅ Track if this is cart checkout
 
         // Handle multi-item checkout from LocalStorage / Request body safely
         let parsedItems = items;
@@ -163,6 +164,7 @@ app.post('/order/:id', async (req, res) => {
         }
 
         if (parsedItems && Array.isArray(parsedItems) && parsedItems.length > 0) {
+            isCartCheckout = true; // ✅ Multi-item = cart checkout
             orderItems = parsedItems.map(item => ({
                 product: item.productId || item.id,
                 title: item.title || 'Product',
@@ -216,7 +218,8 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
-        if (req.session.cart) {
+        // ✅ ONLY clear cart if it's a cart checkout (multiple items)
+        if (isCartCheckout && req.session.cart) {
             req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
         }
 
@@ -235,7 +238,11 @@ app.post('/order/:id', async (req, res) => {
 
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
                 localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
-                localStorage.removeItem('gkp_cart'); // Clear local cart storage
+                
+                // ✅ ONLY clear localStorage cart if it's a cart checkout
+                if (${isCartCheckout}) {
+                    localStorage.removeItem('gkp_cart');
+                }
 
                 alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
                 window.location.href = '/view-orders';
