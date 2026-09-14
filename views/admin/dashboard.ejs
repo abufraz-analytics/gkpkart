@@ -12,6 +12,8 @@
             --success-dark: #059669;
             --danger: #ef4444;
             --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
             --bg-color: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #1e293b;
@@ -173,6 +175,17 @@
             background: linear-gradient(135deg, #1d4ed8, #1e40af);
         }
 
+        /* Special Highlight Card for Multi-Item Orders */
+        .category-card.special-multi {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        }
+
+        .category-card.special-multi:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.25);
+        }
+
         /* Quick Action Section */
         .action-flex {
             display: flex;
@@ -233,11 +246,15 @@
             <p>Click on any category below to view its specific 5-stage order management table and product list:</p>
 
             <div class="category-grid">
+                <!-- Single Item Category Routes -->
                 <a href="/admin/category/Shoes" class="category-card">👟 Shoes</a>
                 <a href="/admin/category/Mobile Accessories" class="category-card">📱 Mobile Accessories</a>
                 <a href="/admin/category/Small Electric Item" class="category-card">🔌 Small Electric Item</a>
                 <a href="/admin/category/Big Electric Item" class="category-card">📺 Big Electric Item</a>
                 <a href="/admin/category/Ladies & Gents Makeup Items" class="category-card">💄 Makeup Items</a>
+                
+                <!-- New Multi-Item Orders Route -->
+                <a href="/admin/orders/multi-item" class="category-card special-multi">📦 Multi-Item Orders (Cart)</a>
             </div>
         </div>
 
@@ -262,7 +279,6 @@
                         <h4>Edit & Manage Products</h4>
                         <p>Modify existing product details, update prices, change stock or remove items.</p>
                     </div>
-                    <!-- Assuming your product list/edit route is /admin/products or similar. You can adjust the link if needed -->
                     <a href="/admin/products" class="btn btn-primary-custom" style="width: 100%; justify-content: center;">✏️ Edit / Manage Products</a>
                 </div>
             </div>
