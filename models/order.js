@@ -1,10 +1,25 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
+    // Optional banaya hai taaki cart/multi-item orders me crash na ho
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
-        required: true
+        required: false
+    },
+    // Multi-item cart orders ke liye items array
+    items: [
+        {
+            productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+            title: String,
+            price: Number,
+            quantity: Number,
+            image: String
+        }
+    ],
+    totalAmount: {
+        type: Number,
+        default: 0
     },
     customerName: {
         type: String,
