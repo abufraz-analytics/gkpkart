@@ -559,12 +559,10 @@
                     💬 Chat on WhatsApp with Seller
                 </a>
 
-                <!-- LIVE Add to Cart Button Form (Updated Route) -->
-                <form action="/cart/add/<%= product._id %>" method="POST">
-                    <button type="submit" class="cart-btn">
-                        🛒 Add to Cart
-                    </button>
-                </form>
+                <!-- Add to Cart Interactive Button -->
+                <button type="button" class="cart-btn" onclick="addToCart('<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', <%= product.price %>, '<%= product.images && product.images.length > 0 ? product.images[0] : '' %>')">
+                    🛒 Add to Cart
+                </button>
 
                 <!-- LIVE Order Now Form Box -->
                 <div class="order-box">
@@ -675,6 +673,21 @@
             changeMedia(media.url, media.type, currentIndex);
         }
 
+        // Add to Cart LocalStorage Handler matching server-side sync
+        function addToCart(id, title, price, image) {
+            let cart = JSON.parse(localStorage.getItem('gkp_cart')) || [];
+            let existingItem = cart.find(item => item.id === id);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ id, title, price, image, quantity: 1 });
+            }
+            
+            localStorage.setItem('gkp_cart', JSON.stringify(cart));
+            alert('Product successfully added to cart!');
+        }
+
         // Fullscreen Lightbox Variables & Functions
         let scale = 1;
         let pointX = 0;
@@ -726,7 +739,6 @@
             const img = document.getElementById('lightboxImg');
             if (!img) return;
 
-            // Mouse Wheel Zoom on Cursor Position
             img.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const xs = (e.clientX - pointX) / scale;
@@ -735,7 +747,6 @@
                 const delta = e.deltaY < 0 ? 1.15 : 0.85;
                 let newScale = scale * delta;
 
-                // Limit min & max zoom
                 if (newScale < 1) {
                     newScale = 1;
                     pointX = 0;
@@ -753,9 +764,8 @@
                 setTransform(img);
             }, {passive: false});
 
-            // Click & Drag (Pan) Support
             img.addEventListener('mousedown', (e) => {
-                if (scale === 1) return; // Don't pan if not zoomed
+                if (scale === 1) return;
                 isPanning = true;
                 startX = e.clientX - pointX;
                 startY = e.clientY - pointY;
@@ -776,7 +786,6 @@
             });
         }
 
-        // Touch Swipe Support for main preview box
         const mainBox = document.getElementById('mainPreviewBox');
         let touchStartX = 0;
         let touchEndX = 0;
@@ -789,7 +798,7 @@
             touchEndX = e.changedTouches[0].screenX;
             let threshold = 50;
             if (touchEndX < touchStartX - threshold) slideMedia(1);
-            if (touchEndX > touchStartX + threshold) slideMedia(-1);
+            if (touchEndX > touchStartX - threshold) slideMedia(-1);
         }, {passive: true});
     </script>
 </body>
