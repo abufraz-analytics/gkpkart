@@ -12,6 +12,8 @@
             --success: #10b981;
             --whatsapp: #25d366;
             --whatsapp-hover: #1ebe57;
+            --cart-btn: #4f46e5;
+            --cart-hover: #4338ca;
             --bg-color: #f8fafc;
             --text-main: #1e293b;
             --text-muted: #64748b;
@@ -338,7 +340,7 @@
             border-radius: 10px;
             font-weight: 700;
             font-size: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             width: 100%;
             box-sizing: border-box;
             transition: background-color 0.2s, transform 0.1s;
@@ -347,6 +349,33 @@
 
         .whatsapp-btn:hover {
             background-color: var(--whatsapp-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Add to Cart Button Styling */
+        .cart-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: var(--cart-btn);
+            color: white;
+            padding: 14px 20px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        .cart-btn:hover {
+            background-color: var(--cart-hover);
             transform: translateY(-1px);
         }
 
@@ -529,6 +558,13 @@
                 <a href="https://wa.me/<%= product.whatsappNumber %>?text=Hello,%20I%20am%20interested%20in%20buying%20this%20product:%20<%= encodeURIComponent(product.title) %>" target="_blank" class="whatsapp-btn">
                     💬 Chat on WhatsApp with Seller
                 </a>
+
+                <!-- Add to Cart Button Form (Linked to Cart Route) -->
+                <form action="/cart/add/<%= product._id %>" method="POST">
+                    <button type="submit" class="cart-btn">
+                        🛒 Add to Cart
+                    </button>
+                </form>
 
                 <!-- Order Now Form Box -->
                 <div class="order-box">
