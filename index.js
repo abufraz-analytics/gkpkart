@@ -23,6 +23,12 @@ app.use(session({
     saveUninitialized: false
 }));
 
+// Global middleware to pass session cart data to all views if needed
+app.use((req, res, next) => {
+    res.locals.cart = req.session.cart || { items: [], totalQty: 0, totalPrice: 0 };
+    next();
+});
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('Database connection error:', err));
@@ -107,21 +113,24 @@ const addToCartHandler = async (req, res) => {
 
         let cart = req.session.cart;
         
-        let existingItem = cart.items.find(item => item.productId.toString() === productId);
+        let existingItem = cart.items.find(item => (item.productId && item.productId.toString() === productId) || (item.id === productId));
         if (existingItem) {
-            existingItem.quantity += 1;
+            existingItem.quantity = (existingItem.quantity || existingItem.qty || 1) + 1;
+            existingItem.qty = existingItem.quantity;
         } else {
             cart.items.push({
                 productId: product._id,
+                id: product._id.toString(),
                 title: product.title,
                 price: product.price,
                 image: product.images && product.images.length > 0 ? product.images[0] : '',
-                quantity: 1
+                quantity: 1,
+                qty: 1
             });
         }
 
-        cart.totalQty = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-        cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        cart.totalQty = cart.items.reduce((sum, item) => sum + (item.quantity || item.qty || 1), 0);
+        cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * (item.quantity || item.qty || 1)), 0);
 
         res.redirect(req.get('Referer') || '/');
     } catch (err) {
@@ -147,8 +156,7 @@ app.post('/order/:id', async (req, res) => {
         if (items && Array.isArray(items) && items.length > 0) {
             orderItems = items;
             calculatedTotal = totalAmount || items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
-            // Get category from the first product item
-            const firstProd = await Product.findById(items[0].productId);
+            const firstProd = await Product.findById(items[0].productId || items[0].id);
             orderCategory = firstProd ? firstProd.category : 'General';
         } else {
             const product = await Product.findById(productId);
@@ -183,6 +191,11 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
+        // Clear session cart after successful order
+        if (req.session.cart) {
+            req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
+        }
+
         res.send(`
             <script>
                 let currentTime = new Date().getTime();
@@ -201,6 +214,7 @@ app.post('/order/:id', async (req, res) => {
 
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
                 localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
+                localStorage.removeItem('gkp_cart'); // Clear local storage cart as well
 
                 alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
                 window.location.href = '/view-orders';
@@ -215,7 +229,7 @@ app.post('/order/:id', async (req, res) => {
 // Customer View Orders Page
 app.get('/view-orders', async (req, res) => {
     try {
-        res.render('customer-orders');
+        res.render('customer-orders', { cart: req.session.cart });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
