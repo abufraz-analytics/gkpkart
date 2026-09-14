@@ -152,12 +152,33 @@ app.post('/order/:id', async (req, res) => {
         let calculatedTotal = 0;
         let orderCategory = '';
 
-        // Handle multi-item checkout from LocalStorage / Request body
-        if (items && Array.isArray(items) && items.length > 0) {
-            orderItems = items;
-            calculatedTotal = totalAmount || items.reduce((sum, item) => sum + (item.price * (item.quantity || item.qty || 1)), 0);
-            const firstProd = await Product.findById(items[0].productId || items[0].id);
-            orderCategory = firstProd ? firstProd.category : 'General';
+        // Handle multi-item checkout from LocalStorage / Request body safely
+        let parsedItems = items;
+        if (typeof items === 'string') {
+            try {
+                parsedItems = JSON.parse(items);
+            } catch (e) {
+                parsedItems = [];
+            }
+        }
+
+        if (parsedItems && Array.isArray(parsedItems) && parsedItems.length > 0) {
+            orderItems = parsedItems.map(item => ({
+                product: item.productId || item.id,
+                title: item.title || 'Product',
+                price: item.price || 0,
+                quantity: item.quantity || item.qty || 1,
+                image: item.image || ''
+            }));
+            calculatedTotal = totalAmount ? Number(totalAmount) : orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            const firstProdId = orderItems[0].product;
+            if (firstProdId && mongoose.Types.ObjectId.isValid(firstProdId)) {
+                const firstProd = await Product.findById(firstProdId);
+                orderCategory = firstProd ? firstProd.category : 'General';
+            } else {
+                orderCategory = 'General';
+            }
         } else {
             const product = await Product.findById(productId);
             if (!product) {
@@ -177,8 +198,12 @@ app.post('/order/:id', async (req, res) => {
         // Generate a 4-digit random secret key for delivery verification
         const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
 
+        const primaryProdRef = (productId && productId !== 'cart' && mongoose.Types.ObjectId.isValid(productId)) 
+            ? productId 
+            : (orderItems[0] && orderItems[0].product && mongoose.Types.ObjectId.isValid(orderItems[0].product) ? orderItems[0].product : null);
+
         const newOrder = new Order({
-            product: productId && productId !== 'cart' ? productId : orderItems[0].productId,
+            product: primaryProdRef,
             items: orderItems,
             totalAmount: calculatedTotal,
             customerName,
