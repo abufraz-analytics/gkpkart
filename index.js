@@ -142,37 +142,37 @@ const addToCartHandler = async (req, res) => {
 app.post('/cart/add/:id', addToCartHandler);
 app.get('/cart/add/:id', addToCartHandler);
 
-// Handle Order Submission with Secret Key Generation & LocalStorage Sync
-app.post('/order/:id', async (req, res) => {
+// Handle Order Submission (Supports both Single Product & Cart Checkout)
+const handleOrderSubmission = async (req, res) => {
     try {
-        const { customerName, customerPhone, customerAddress, items, totalAmount } = req.body;
+        const { customerName, phone, location, cartData } = req.body;
         const productId = req.params.id;
         
         let orderItems = [];
         let calculatedTotal = 0;
         let orderCategory = '';
 
-        // Handle multi-item checkout from LocalStorage / Request body safely
-        let parsedItems = items;
-        if (typeof items === 'string') {
+        // Handle Cart Checkout data sent from Modal
+        let parsedCart = cartData;
+        if (typeof cartData === 'string') {
             try {
-                parsedItems = JSON.parse(items);
+                parsedCart = JSON.parse(cartData);
             } catch (e) {
-                parsedItems = [];
+                parsedCart = [];
             }
         }
 
-        if (parsedItems && Array.isArray(parsedItems) && parsedItems.length > 0) {
-            orderItems = parsedItems.map(item => ({
-                product: item.productId || item.id,
+        if (productId === 'cart' || (parsedCart && Array.isArray(parsedCart) && parsedCart.length > 0)) {
+            orderItems = parsedCart.map(item => ({
+                product: item.id || item.productId,
                 title: item.title || 'Product',
                 price: item.price || 0,
-                quantity: item.quantity || item.qty || 1,
+                quantity: item.qty || item.quantity || 1,
                 image: item.image || ''
             }));
-            calculatedTotal = totalAmount ? Number(totalAmount) : orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            calculatedTotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             
-            const firstProdId = orderItems[0].product;
+            const firstProdId = orderItems[0] ? orderItems[0].product : null;
             if (firstProdId && mongoose.Types.ObjectId.isValid(firstProdId)) {
                 const firstProd = await Product.findById(firstProdId);
                 orderCategory = firstProd ? firstProd.category : 'General';
@@ -180,6 +180,7 @@ app.post('/order/:id', async (req, res) => {
                 orderCategory = 'General';
             }
         } else {
+            // Single Product Checkout
             const product = await Product.findById(productId);
             if (!product) {
                 return res.status(404).send('Product not found');
@@ -206,9 +207,9 @@ app.post('/order/:id', async (req, res) => {
             product: primaryProdRef,
             items: orderItems,
             totalAmount: calculatedTotal,
-            customerName,
-            phone: customerPhone,
-            location: customerAddress,
+            customerName: customerName,
+            phone: phone,
+            location: location,
             category: orderCategory,
             orderStatus: 'New',
             secretKey: secretKey
@@ -245,7 +246,10 @@ app.post('/order/:id', async (req, res) => {
         console.error('Error saving order:', err.message);
         res.status(500).send('Server Error during order placement');
     }
-});
+};
+
+app.post('/order/cart', handleOrderSubmission);
+app.post('/order/:id', handleOrderSubmission);
 
 // Customer View Orders Page
 app.get('/view-orders', async (req, res) => {
