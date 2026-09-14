@@ -86,6 +86,48 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
+// ================= ADD TO CART ROUTE (ADDED) =================
+app.post('/cart/add/:id', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const product = await Product.findById(productId);
+        
+        if (!product) {
+            return res.status(404).send('Product not found');
+        }
+
+        // Initialize cart in session if not present
+        if (!req.session.cart) {
+            req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
+        }
+
+        let cart = req.session.cart;
+        
+        // Check if item already exists in cart, then increment quantity, otherwise push new
+        let existingItem = cart.items.find(item => item.productId.toString() === productId);
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.items.push({
+                productId: product._id,
+                title: product.title,
+                price: product.price,
+                image: product.images && product.images.length > 0 ? product.images[0] : '',
+                quantity: 1
+            });
+        }
+
+        // Recalculate totals
+        cart.totalQty = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        res.redirect('back');
+    } catch (err) {
+        console.error('Error adding to cart:', err);
+        res.status(500).send('Server Error during adding to cart');
+    }
+});
+
 // Handle Order Submission with Secret Key Generation & Browser LocalStorage saving (Updated for multi-item and multi-order support)
 app.post('/order/:id', async (req, res) => {
     try {
