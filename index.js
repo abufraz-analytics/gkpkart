@@ -23,7 +23,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// Global middleware to pass session cart data to all views if needed
+// Global middleware for cart fallback
 app.use((req, res, next) => {
     res.locals.cart = req.session.cart || { items: [], totalQty: 0, totalPrice: 0 };
     next();
@@ -92,7 +92,7 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// ================= ADD TO CART ROUTE (GET & POST Supported Safely) =================
+// ================= CART MANAGEMENT (Client LocalStorage Supported) =================
 const addToCartHandler = async (req, res) => {
     try {
         const productId = req.params.id;
@@ -142,7 +142,7 @@ const addToCartHandler = async (req, res) => {
 app.post('/cart/add/:id', addToCartHandler);
 app.get('/cart/add/:id', addToCartHandler);
 
-// Handle Order Submission with Secret Key Generation & Browser LocalStorage saving (Updated for multi-item and multi-order support)
+// Handle Order Submission with Secret Key Generation & LocalStorage Sync
 app.post('/order/:id', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress, items, totalAmount } = req.body;
@@ -152,10 +152,10 @@ app.post('/order/:id', async (req, res) => {
         let calculatedTotal = 0;
         let orderCategory = '';
 
-        // Handle multi-item checkout if passed via request body, else fallback to single product order
+        // Handle multi-item checkout from LocalStorage / Request body
         if (items && Array.isArray(items) && items.length > 0) {
             orderItems = items;
-            calculatedTotal = totalAmount || items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+            calculatedTotal = totalAmount || items.reduce((sum, item) => sum + (item.price * (item.quantity || item.qty || 1)), 0);
             const firstProd = await Product.findById(items[0].productId || items[0].id);
             orderCategory = firstProd ? firstProd.category : 'General';
         } else {
@@ -178,7 +178,7 @@ app.post('/order/:id', async (req, res) => {
         const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
 
         const newOrder = new Order({
-            product: productId, // Main reference for legacy schemas
+            product: productId && productId !== 'cart' ? productId : orderItems[0].productId,
             items: orderItems,
             totalAmount: calculatedTotal,
             customerName,
@@ -191,16 +191,12 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
-        // Clear session cart after successful order
         if (req.session.cart) {
             req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
         }
 
         res.send(`
             <script>
-                let currentTime = new Date().getTime();
-                
-                // Fetch existing time-stamped orders array
                 let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
                 
                 if (savedOrdersData.length === 0) {
@@ -214,7 +210,7 @@ app.post('/order/:id', async (req, res) => {
 
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
                 localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
-                localStorage.removeItem('gkp_cart'); // Clear local storage cart as well
+                localStorage.removeItem('gkp_cart'); // Clear local cart storage
 
                 alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
                 window.location.href = '/view-orders';
@@ -479,7 +475,6 @@ app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
 
 // ================= PRODUCT CRUD ROUTES =================
 
-// ADD PRODUCT - GET ROUTE
 app.get('/admin/add-product', isAdminLoggedIn, (req, res) => {
     try {
         res.render('admin/add-product');
@@ -533,7 +528,6 @@ app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// MANAGE / EDIT PRODUCTS LIST ROUTE
 app.get('/admin/products', isAdminLoggedIn, async (req, res) => {
     try {
         let searchQuery = req.query.search ? req.query.search.trim() : '';
