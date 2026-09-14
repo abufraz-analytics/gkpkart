@@ -86,33 +86,56 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// Handle Order Submission with Secret Key Generation & Browser LocalStorage saving (Updated for multiple orders persistence)
+// Handle Order Submission with Secret Key Generation & Browser LocalStorage saving (Updated for multi-item and multi-order support)
 app.post('/order/:id', async (req, res) => {
     try {
-        const { customerName, customerPhone, customerAddress } = req.body;
+        const { customerName, customerPhone, customerAddress, items, totalAmount } = req.body;
         const productId = req.params.id;
-        const product = await Product.findById(productId);
+        
+        let orderItems = [];
+        let calculatedTotal = 0;
+        let orderCategory = '';
 
-        if (!product) {
-            return res.status(404).send('Product not found');
+        // Handle multi-item checkout if passed via request body, else fallback to single product order
+        if (items && Array.isArray(items) && items.length > 0) {
+            orderItems = items;
+            calculatedTotal = totalAmount || items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+            // Get category from the first product item
+            const firstProd = await Product.findById(items[0].productId);
+            orderCategory = firstProd ? firstProd.category : 'General';
+        } else {
+            const product = await Product.findById(productId);
+            if (!product) {
+                return res.status(404).send('Product not found');
+            }
+            orderItems = [{
+                product: product._id,
+                title: product.title,
+                price: product.price,
+                quantity: 1,
+                image: product.images && product.images.length > 0 ? product.images[0] : ''
+            }];
+            calculatedTotal = product.price;
+            orderCategory = product.category;
         }
 
         // Generate a 4-digit random secret key for delivery verification
         const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
 
         const newOrder = new Order({
-            product: productId,
+            product: productId, // Main reference for legacy schemas
+            items: orderItems,
+            totalAmount: calculatedTotal,
             customerName,
             phone: customerPhone,
             location: customerAddress,
-            category: product.category,
+            category: orderCategory,
             orderStatus: 'New',
             secretKey: secretKey
         });
 
         await newOrder.save();
         
-        // Updated browser local storage sync script to support multiple orders without overlapping
         res.send(`
             <script>
                 let currentTime = new Date().getTime();
@@ -120,7 +143,6 @@ app.post('/order/:id', async (req, res) => {
                 // Fetch existing time-stamped orders array
                 let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
                 
-                // Fallback for old simple storage format if it exists
                 if (savedOrdersData.length === 0) {
                     let oldIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
                     if (oldIds.length > 0) {
@@ -128,10 +150,8 @@ app.post('/order/:id', async (req, res) => {
                     }
                 }
 
-                // Add the new order ID with null completedAt
                 savedOrdersData.push({ id: "${newOrder._id}", completedAt: null });
 
-                // Save both updated formats back to localStorage
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
                 localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
 
