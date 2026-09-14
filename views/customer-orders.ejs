@@ -241,7 +241,7 @@
             transform: translateY(-1px);
         }
 
-        /* Order Card Styling (Purana Logic & Class structure maintained) */
+        /* Order Card Styling */
         .order-card { 
             background: #fff; 
             border: 1px solid var(--border-color); 
@@ -302,7 +302,7 @@
 
     <div class="container">
         
-        <!-- Shopping Cart Section (New Feature Added) -->
+        <!-- Shopping Cart Section -->
         <div class="section-box">
             <h3>🛒 Your Shopping Cart</h3>
             <div id="cartContainer">
@@ -310,14 +310,13 @@
             </div>
         </div>
 
-        <!-- Placed Orders Section (Purana Logic intact) -->
+        <!-- Placed Orders Section -->
         <div class="section-box">
             <h3>📦 Your Placed Orders</h3>
             <div class="info-box">
                 <p><strong>Note:</strong> Your active order and 4-digit secret key are shown here. Share this key with the delivery boy upon arrival to complete delivery. To cancel your order, please WhatsApp us at: <strong>+917607937973</strong></p>
             </div>
             
-            <!-- Dynamic Orders Container -->
             <div id="ordersContainer">
                 <p style="text-align: center; color: var(--text-muted); padding: 15px;">Loading your orders from this browser...</p>
             </div>
@@ -361,7 +360,7 @@
             saveCart(cart);
         }
 
-        async function renderCart() {
+        function renderCart() {
             let cart = getCart();
             const cartContainer = document.getElementById('cartContainer');
 
@@ -370,103 +369,55 @@
                 return;
             }
 
-            try {
-                // Fetch latest product info for items in cart
-                let productIds = cart.map(i => i.id);
-                let response = await fetch('/api/customer-orders', { // or product batch endpoint if available, but using product details or client data
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderIds: productIds }) // reusing endpoint or handle gracefully
-                });
-                
-                // Fallback if backend expects orderIds vs productIds, let's render directly from cart storage metadata if stored, or fetch
-                // To keep it foolproof, let's build card from local cart cache or fetch product info
-                let html = '';
-                let grandTotal = 0;
+            let html = '';
+            let grandTotal = 0;
 
-                cart.forEach(cartItem => {
-                    let itemTotal = (cartItem.price || 0) * (cartItem.qty || 1);
-                    grandTotal += itemTotal;
-
-                    html += `
-                        <div class="cart-item-card">
-                            <div class="cart-item-info">
-                                <img src="${cartItem.image || ''}" alt="Product">
-                                <div class="cart-item-details">
-                                    <h4>${cartItem.title || 'Product'}</h4>
-                                    <div class="cart-item-price">₹${cartItem.price} x ${cartItem.qty} = ₹${itemTotal}</div>
-                                </div>
-                            </div>
-                            <div class="cart-actions">
-                                <div class="qty-control">
-                                    <button class="qty-btn" onclick="updateQty('${cartItem.id}', -1)">-</button>
-                                    <span class="qty-val">${cartItem.qty}</span>
-                                    <button class="qty-btn" onclick="updateQty('${cartItem.id}', 1)">+</button>
-                                </div>
-                                <button class="remove-btn" onclick="removeFromCart('${cartItem.id}')">Remove</button>
-                            </div>
-                        </div>
-                    `;
-                });
+            cart.forEach(cartItem => {
+                let itemTotal = (cartItem.price || 0) * (cartItem.qty || 1);
+                grandTotal += itemTotal;
 
                 html += `
-                    <div class="cart-summary-bar">
-                        <div class="grand-total">Total Amount: <span>₹${grandTotal}</span></div>
-                        <button class="checkout-all-btn" onclick="checkoutCart()">Proceed to Checkout All</button>
-                    </div>
-                `;
-
-                cartContainer.innerHTML = html;
-            } catch (err) {
-                console.error(err);
-                // Fallback render directly from localStorage cart data
-                let html = '';
-                let grandTotal = 0;
-                cart.forEach(cartItem => {
-                    let itemTotal = (cartItem.price || 0) * (cartItem.qty || 1);
-                    grandTotal += itemTotal;
-                    html += `
-                        <div class="cart-item-card">
-                            <div class="cart-item-info">
-                                <img src="${cartItem.image || ''}" alt="Product">
-                                <div class="cart-item-details">
-                                    <h4>${cartItem.title || 'Product'}</h4>
-                                    <div class="cart-item-price">₹${cartItem.price}</div>
-                                </div>
-                            </div>
-                            <div class="cart-actions">
-                                <div class="qty-control">
-                                    <button class="qty-btn" onclick="updateQty('${cartItem.id}', -1)">-</button>
-                                    <span class="qty-val">${cartItem.qty}</span>
-                                    <button class="qty-btn" onclick="updateQty('${cartItem.id}', 1)">+</button>
-                                </div>
-                                <button class="remove-btn" onclick="removeFromCart('${cartItem.id}')">Remove</button>
+                    <div class="cart-item-card">
+                        <div class="cart-item-info">
+                            <img src="${cartItem.image || ''}" alt="Product">
+                            <div class="cart-item-details">
+                                <h4>${cartItem.title || 'Product'}</h4>
+                                <div class="cart-item-price">₹${cartItem.price} x ${cartItem.qty} = ₹${itemTotal}</div>
                             </div>
                         </div>
-                    `;
-                });
-                html += `
-                    <div class="cart-summary-bar">
-                        <div class="grand-total">Total Amount: <span>₹${grandTotal}</span></div>
-                        <button class="checkout-all-btn" onclick="checkoutCart()">Proceed to Checkout All</button>
+                        <div class="cart-actions">
+                            <div class="qty-control">
+                                <button class="qty-btn" onclick="updateQty('${cartItem.id}', -1)">-</button>
+                                <span class="qty-val">${cartItem.qty}</span>
+                                <button class="qty-btn" onclick="updateQty('${cartItem.id}', 1)">+</button>
+                            </div>
+                            <button class="remove-btn" onclick="removeFromCart('${cartItem.id}')">Remove</button>
+                        </div>
                     </div>
                 `;
-                cartContainer.innerHTML = html;
-            }
+            });
+
+            html += `
+                <div class="cart-summary-bar">
+                    <div class="grand-total">Total Amount: <span>₹${grandTotal}</span></div>
+                    <button class="checkout-all-btn" onclick="checkoutCart()">Proceed to Checkout All</button>
+                </div>
+            `;
+
+            cartContainer.innerHTML = html;
         }
 
         function checkoutCart() {
             let cart = getCart();
             if (cart.length === 0) return;
-            alert('Redirecting to checkout for ' + cart.length + ' items!');
-            // Integration hook for ordering cart items
+            // Yahan aap checkout page par redirect ya multi-item checkout modal open kar sakte hain
+            alert('Proceeding to checkout with ' + cart.length + ' items. Total value calculated successfully!');
         }
 
-        // --- Purana Order Tracking Logic (Aapka exact code) ---
+        // --- Order Tracking Logic ---
         async function fetchMyOrders() {
             let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
             
-            // Fallback for old storage format if needed
             if (savedOrdersData.length === 0) {
                 let oldIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
                 if (oldIds.length > 0) {
@@ -569,7 +520,7 @@
             }
         }
 
-        // Initialize both
+        // Initialize both features on load
         renderCart();
         fetchMyOrders();
     </script>
