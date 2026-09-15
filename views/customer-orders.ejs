@@ -101,7 +101,6 @@
             line-height: 1.6;
         }
 
-        /* Cart Item Styling */
         .cart-item-card {
             display: flex;
             align-items: center;
@@ -176,9 +175,7 @@
             transition: background 0.2s;
         }
 
-        .qty-btn:hover {
-            background: #e2e8f0;
-        }
+        .qty-btn:hover { background: #e2e8f0; }
 
         .qty-val {
             padding: 0 10px;
@@ -195,11 +192,6 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
-            transition: background 0.2s;
-        }
-
-        .remove-btn:hover {
-            background: #fecaca;
         }
 
         .confirm-order-btn {
@@ -211,11 +203,6 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
-            transition: background 0.2s;
-        }
-
-        .confirm-order-btn:hover {
-            background: #059669;
         }
 
         .cart-summary-bar {
@@ -234,7 +221,6 @@
         .grand-total {
             font-size: 18px;
             font-weight: 700;
-            color: var(--text-main);
         }
 
         .grand-total span {
@@ -252,17 +238,8 @@
             font-weight: 700;
             font-size: 15px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-            transition: all 0.2s;
         }
 
-        .checkout-all-btn:hover {
-            background-color: #d97706;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        /* Order Card Styling */
         .order-card { 
             background: #fff; 
             border: 1px solid var(--border-color); 
@@ -270,11 +247,9 @@
             padding: 20px; 
             margin-bottom: 16px; 
             border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02); 
         }
         .order-card.Delivered { border-left-color: var(--success); }
         .order-card.Canceled { border-left-color: var(--danger); }
-        .order-card p { margin: 8px 0; font-size: 14px; }
         
         .secret-box { 
             background: #fef3c7; 
@@ -285,8 +260,6 @@
             border-radius: 8px; 
             display: inline-block; 
             font-size: 16px; 
-            letter-spacing: 1.5px; 
-            margin-top: 4px;
         }
 
         .continue-shopping-btn {
@@ -297,45 +270,23 @@
             border-radius: 10px; 
             font-weight: 700; 
             display: inline-block; 
-            transition: background 0.2s;
-        }
-        .continue-shopping-btn:hover {
-            background: var(--primary-dark);
         }
 
-        /* Modal Styling */
         .modal {
             display: none;
             position: fixed;
             z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+            left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease;
         }
 
         .modal-content {
             background-color: var(--card-bg);
             margin: 5% auto;
             padding: 30px;
-            border: 1px solid var(--border-color);
             border-radius: 12px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
@@ -347,94 +298,22 @@
             padding-bottom: 15px;
         }
 
-        .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: var(--text-main);
-        }
-
         .close-modal {
             font-size: 28px;
             font-weight: bold;
-            color: var(--text-muted);
             cursor: pointer;
             background: none;
             border: none;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .close-modal:hover {
-            color: var(--text-main);
-        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; }
 
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text-main);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 24px;
-        }
-
-        .form-actions button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .submit-btn {
-            background: var(--success);
-            color: white;
-        }
-
-        .submit-btn:hover {
-            background: #059669;
-            transform: translateY(-1px);
-        }
-
-        .cancel-btn {
-            background: #f1f5f9;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
-        .cancel-btn:hover {
-            background: #e2e8f0;
-        }
+        .form-actions { display: flex; gap: 10px; margin-top: 24px; }
+        .form-actions button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .submit-btn { background: var(--success); color: white; }
+        .cancel-btn { background: #f1f5f9; color: var(--text-main); }
 
         .otp-message {
             background: #ecfdf5;
@@ -446,17 +325,6 @@
             font-size: 13px;
             text-align: center;
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            header { padding: 15px; flex-direction: column; gap: 10px; text-align: center; }
-            .section-box { padding: 16px; }
-            .cart-item-card { flex-direction: column; align-items: flex-start; }
-            .cart-actions { width: 100%; justify-content: space-between; }
-            .cart-summary-bar { flex-direction: column; text-align: center; }
-            .modal-content { width: 95%; margin: 20% auto; }
-        }
     </style>
 </head>
 <body>
@@ -467,8 +335,6 @@
     </header>
 
     <div class="container">
-        
-        <!-- Shopping Cart Section -->
         <div class="section-box">
             <h3>🛒 Your Shopping Cart</h3>
             <div id="cartContainer">
@@ -476,11 +342,10 @@
             </div>
         </div>
 
-        <!-- Placed Orders Section -->
         <div class="section-box">
             <h3>📦 Your Placed Orders</h3>
             <div class="info-box">
-                <p><strong>Note:</strong> Your active order and 4-digit secret key are shown here. Share this key with the delivery boy upon arrival to complete delivery. To cancel your order, please contact support +917607937973.</p>
+                <p><strong>Note:</strong> Your active order and 4-digit secret key are shown here. Share this key with the delivery boy upon arrival to complete delivery.</p>
             </div>
             
             <div id="ordersContainer">
@@ -493,7 +358,7 @@
         </div>
     </div>
 
-    <!-- Order Confirmation Modal -->
+    <!-- Order Modal -->
     <div id="orderModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -501,14 +366,12 @@
                 <button class="close-modal" onclick="closeOrderModal()">&times;</button>
             </div>
             
-            <div id="modalProductInfo" style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
-                <!-- Product details will be inserted here -->
-            </div>
+            <div id="modalProductInfo" style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
 
             <form id="orderForm" onsubmit="submitOrderFromCart(event)">
                 <div class="form-group">
                     <label for="modalCustomerName">Your Name:</label>
-                    <input type="text" id="modalCustomerName" name="customerName" required placeholder="Enter your full name">
+                    <input type="text" id="modalCustomerName" name="customerName" required placeholder="Enter full name">
                 </div>
 
                 <div class="form-group">
@@ -527,17 +390,14 @@
                 </div>
             </form>
 
-            <div id="otpMessage" class="otp-message" style="display: none;">
-                ✅ Order placed successfully! Your secret code will be shared with delivery boy.
-            </div>
+            <div id="otpMessage" class="otp-message" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        let currentOrderItem = null; // Track single cart item being ordered
-        let isCheckoutAll = false;  // Flag to know if we are checking out the whole cart
+        let currentOrderItem = null;
+        let isCheckoutAll = false;
 
-        // --- Server Cart Sync ---
         <% if (typeof cart !== 'undefined' && cart && cart.length > 0) { %>
             try {
                 let serverCart = <%- JSON.stringify(cart) %>;
@@ -557,7 +417,6 @@
             }
         <% } %>
 
-        // --- Shopping Cart Management Functions ---
         function getCart() {
             try {
                 let cart = JSON.parse(localStorage.getItem('gkp_cart') || '[]');
@@ -568,9 +427,7 @@
                     image: item.image || '',
                     qty: item.qty || 1
                 }));
-            } catch(e) {
-                return [];
-            }
+            } catch(e) { return []; }
         }
 
         function saveCart(cart) {
@@ -583,9 +440,7 @@
             let item = cart.find(i => i.id === productId);
             if (item) {
                 item.qty += delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== productId);
-                }
+                if (item.qty <= 0) cart = cart.filter(i => i.id !== productId);
             }
             saveCart(cart);
         }
@@ -596,32 +451,25 @@
             saveCart(cart);
         }
 
-        // Open Order Modal for individual cart item
         function openOrderModal(productId) {
             let cart = getCart();
             let item = cart.find(i => i.id === productId);
-            
             if (!item) return;
 
             currentOrderItem = item;
             isCheckoutAll = false;
 
-            // Show product info
             document.getElementById('modalProductInfo').innerHTML = `
                 <strong>${item.title}</strong><br>
                 Price: ₹${item.price} × ${item.qty} = <strong>₹${item.price * item.qty}</strong>
             `;
 
-            // Clear form
             document.getElementById('orderForm').reset();
             document.getElementById('orderForm').style.display = 'block';
             document.getElementById('otpMessage').style.display = 'none';
-
-            // Show modal
             document.getElementById('orderModal').style.display = 'block';
         }
 
-        // Open Order Modal for Checking Out ALL Cart Items
         function checkoutCart() {
             let cart = getCart();
             if (cart.length === 0) return;
@@ -632,18 +480,14 @@
             let grandTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             let totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-            // Show cart summary info in modal
             document.getElementById('modalProductInfo').innerHTML = `
                 <strong>Complete Cart Checkout</strong><br>
                 Total Items: ${totalItemsCount} | Grand Total: <strong>₹${grandTotal}</strong>
             `;
 
-            // Clear form
             document.getElementById('orderForm').reset();
             document.getElementById('orderForm').style.display = 'block';
             document.getElementById('otpMessage').style.display = 'none';
-
-            // Show modal
             document.getElementById('orderModal').style.display = 'block';
         }
 
@@ -653,7 +497,7 @@
             isCheckoutAll = false;
         }
 
-        // Submit Order from Cart (Handles both Single Item or Checkout All)
+        // Submit Cart Order to Server
         function submitOrderFromCart(event) {
             event.preventDefault();
 
@@ -675,11 +519,9 @@
 
                 orderItems = cart.map(item => ({
                     productId: item.id,
-                    id: item.id,
                     title: item.title,
                     price: item.price,
                     qty: item.qty,
-                    quantity: item.qty,
                     image: item.image
                 }));
 
@@ -689,48 +531,44 @@
 
                 orderItems = [{
                     productId: currentOrderItem.id,
-                    id: currentOrderItem.id,
                     title: currentOrderItem.title,
                     price: currentOrderItem.price,
                     qty: currentOrderItem.qty,
-                    quantity: currentOrderItem.qty,
                     image: currentOrderItem.image
                 }];
 
                 totalAmount = currentOrderItem.price * currentOrderItem.qty;
             }
 
-            // Send to backend
             fetch('/order/cart', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    customerName: customerName,
-                    customerPhone: customerPhone,
-                    customerAddress: customerAddress,
-                    items: orderItems,
-                    totalAmount: totalAmount
+                    customerName, customerPhone, customerAddress, items: orderItems, totalAmount
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show success message with secret key
+                    // Save placed order ID locally for tracking
+                    let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
+                    savedOrdersData.push({ id: data.orderId, completedAt: null });
+                    localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
+                    localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
+
                     document.getElementById('otpMessage').innerHTML = 
                         `✅ Order placed successfully! Your secret code is <strong>${data.secretKey}</strong>. Share this with delivery boy.`;
                     document.getElementById('otpMessage').style.display = 'block';
                     document.getElementById('orderForm').style.display = 'none';
 
-                    // Clear cart accordingly
                     let cart = getCart();
                     if (isCheckoutAll) {
-                        saveCart([]); // Clear all
+                        saveCart([]);
                     } else if (currentOrderItem) {
                         cart = cart.filter(i => i.id !== currentOrderItem.id);
-                        saveCart(cart); // Clear single item
+                        saveCart(cart);
                     }
 
-                    // Close modal after 3 seconds and refresh orders list
                     setTimeout(() => {
                         closeOrderModal();
                         document.getElementById('orderForm').style.display = 'block';
@@ -752,7 +590,7 @@
             const cartContainer = document.getElementById('cartContainer');
 
             if (cart.length === 0) {
-                cartContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Your cart is empty. Add products from home or product pages!</p>';
+                cartContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Your cart is empty.</p>';
                 return;
             }
 
@@ -795,21 +633,12 @@
             cartContainer.innerHTML = html;
         }
 
-        // --- Order Tracking Logic ---
         async function fetchMyOrders() {
             let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
-            
-            if (savedOrdersData.length === 0) {
-                let oldIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
-                if (oldIds.length > 0) {
-                    savedOrdersData = oldIds.map(id => ({ id: id, completedAt: null }));
-                }
-            }
-
             const container = document.getElementById('ordersContainer');
 
             if (savedOrdersData.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 15px;">Aapne is browser se abhi tak koi order place nahi kiya hai.</p>';
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 15px;">No orders found.</p>';
                 return;
             }
 
@@ -838,12 +667,10 @@
                     let completedAt = savedItem ? savedItem.completedAt : null;
 
                     if (order.orderStatus === 'Delivered' || order.orderStatus === 'Canceled') {
-                        if (!completedAt) {
-                            completedAt = currentTime;
-                        }
+                        if (!completedAt) completedAt = currentTime;
                         let hoursPassed = (currentTime - completedAt) / (1000 * 60 * 60);
                         if (hoursPassed < 48) {
-                            updatedSavedOrdersData.push({ id: order._id, completedAt: completedAt });
+                            updatedSavedOrdersData.push({ id: order._id, completedAt });
                         } else {
                             return; 
                         }
@@ -851,28 +678,27 @@
                         updatedSavedOrdersData.push({ id: order._id, completedAt: null });
                     }
 
-                    // Handle both single product and multi-item orders
-                    let productTitle = 'Order Items';
+                    let productTitle = 'Cart Order Items';
                     let productPrice = '₹' + (order.totalAmount || 0);
                     let productImg = '';
 
                     if (order.items && order.items.length > 0) {
-                        productTitle = order.items.length + ' items in order';
-                        productImg = order.items[0].image || (order.items[0].product && order.items[0].product.images ? order.items[0].product.images[0] : '');
+                        productTitle = order.items.map(i => `${i.title} (x${i.quantity || i.qty || 1})`).join(', ');
+                        productImg = order.items[0].image || '';
                     } else if (order.product) {
                         productTitle = order.product.title;
                         productPrice = '₹' + order.product.price;
-                        productImg = order.product.images && order.product.images.length > 0 ? order.product.images[0] : '';
+                        productImg = order.product.images ? order.product.images[0] : '';
                     }
 
                     let statusMessageHtml = '';
                     if (order.orderStatus === 'Delivered') {
-                        statusMessageHtml = `<p style="color: var(--success); font-weight: bold; margin-top: 10px;">✔ This order has been successfully delivered!</p>`;
+                        statusMessageHtml = `<p style="color: var(--success); font-weight: bold; margin-top: 10px;">✔ Delivered Successfully!</p>`;
                     } else if (order.orderStatus === 'Canceled') {
-                        statusMessageHtml = `<p style="color: var(--danger); font-weight: bold; margin-top: 10px;">✔ This order has been canceled.</p>`;
+                        statusMessageHtml = `<p style="color: var(--danger); font-weight: bold; margin-top: 10px;">✔ Order Canceled.</p>`;
                     } else {
                         statusMessageHtml = `
-                            <p style="margin-top: 10px;"><strong>Secret Code for Delivery Boy:</strong><br>
+                            <p style="margin-top: 10px;"><strong>Secret Code:</strong><br>
                             <span class="secret-box">${order.secretKey}</span></p>
                         `;
                     }
@@ -880,17 +706,16 @@
                     html += `
                         <div class="order-card ${order.orderStatus}">
                             <div style="display: flex; gap: 15px; align-items: center;">
-                                ${productImg ? `<img src="${productImg}" alt="Product" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">` : ''}
+                                ${productImg ? `<img src="${productImg}" alt="Product" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">` : ''}
                                 <div style="flex-grow: 1;">
                                     <h4 style="margin: 0 0 5px 0; color: var(--text-main);">${productTitle}</h4>
                                     <span style="color: #e11d48; font-weight: bold;">${productPrice}</span>
                                 </div>
                             </div>
                             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
-                            <p><strong>Customer Name:</strong> ${order.customerName}</p>
-                            <p><strong>Phone:</strong> ${order.phone}</p>
-                            <p><strong>Delivery Address:</strong> ${order.location}</p>
-                            <p><strong>Order Status:</strong> <span style="color: var(--primary); font-weight: bold;">${order.orderStatus}</span></p>
+                            <p><strong>Customer:</strong> ${order.customerName} (${order.phone})</p>
+                            <p><strong>Address:</strong> ${order.location}</p>
+                            <p><strong>Status:</strong> <span style="color: var(--primary); font-weight: bold;">${order.orderStatus}</span></p>
                             ${statusMessageHtml}
                         </div>
                     `;
@@ -899,30 +724,20 @@
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(updatedSavedOrdersData));
                 localStorage.setItem('gkp_my_orders', JSON.stringify(updatedSavedOrdersData.map(item => item.id)));
 
-                if (html === '') {
-                    container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 15px;">Aapne is browser se abhi tak koi active order nahi kiya hai.</p>';
-                } else {
-                    container.innerHTML = html;
-                }
-
+                container.innerHTML = html || '<p style="text-align: center; color: var(--text-muted); padding: 15px;">No active orders.</p>';
             } catch (err) {
                 console.error(err);
                 container.innerHTML = '<p style="text-align: center; color: var(--danger);">Failed to load orders.</p>';
             }
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             let modal = document.getElementById('orderModal');
-            if (event.target === modal) {
-                closeOrderModal();
-            }
+            if (event.target === modal) closeOrderModal();
         }
 
-        // Initialize both features on load
         renderCart();
         fetchMyOrders();
     </script>
-
 </body>
 </html>
