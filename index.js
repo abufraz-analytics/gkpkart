@@ -5,7 +5,7 @@ const session = require('express-session');
 
 const Product = require('./models/product');
 const Order = require('./models/order');
-const CartOrder = require('./models/cartOrder'); // Naya CartOrder model import kiya
+const CartOrder = require('./models/cartOrder');
 const { upload } = require('./utils/cloudinary');
 
 dotenv.config();
@@ -34,7 +34,7 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('Database connection error:', err));
 
-// Helper: Get 4 Delivery Boys from Environment Variables
+// Helper: Get Delivery Boys
 const getDeliveryBoys = () => {
     return [
         { id: process.env.DELIVERY_ID_1 || 'del1', pass: process.env.DELIVERY_PASS_1 || 'pass1' },
@@ -75,11 +75,15 @@ app.get('/', async (req, res) => {
 // Single Product Detail page
 app.get('/product/:id', async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.redirect('/');
+        }
+
         const product = await Product.findById(req.params.id);
         if (!product) {
             return res.redirect('/');
         }
-        
+
         let averageRating = 0;
         if (product.reviews && product.reviews.length > 0) {
             let sum = product.reviews.reduce((acc, review) => acc + review.rating, 0);
@@ -98,6 +102,10 @@ const addToCartHandler = async (req, res) => {
     try {
         const productId = req.params.id;
         if (productId === 'back') return res.redirect('/');
+        
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).send('Invalid Product ID');
+        }
 
         const product = await Product.findById(productId);
         if (!product) return res.status(404).send('Product not found');
@@ -108,7 +116,7 @@ const addToCartHandler = async (req, res) => {
 
         let cart = req.session.cart;
         let existingItem = cart.items.find(item => (item.productId && item.productId.toString() === productId) || (item.id === productId));
-        
+
         if (existingItem) {
             existingItem.quantity = (existingItem.quantity || existingItem.qty || 1) + 1;
             existingItem.qty = existingItem.quantity;
@@ -146,53 +154,7 @@ app.get('/checkout', (req, res) => {
     }
 });
 
-// Single Direct Product Order Route (Category Table Me Jata Hai)
-app.post('/order/:id', async (req, res) => {
-    try {
-        const { customerName, customerPhone, customerAddress } = req.body;
-        const productId = req.params.id;
-        
-        const product = await Product.findById(productId);
-        if (!product) return res.status(404).send('Product not found');
-
-        const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
-
-        const newOrder = new Order({
-            product: product._id,
-            items: [{
-                product: product._id,
-                title: product.title,
-                price: product.price,
-                quantity: 1,
-                image: product.images && product.images.length > 0 ? product.images[0] : ''
-            }],
-            totalAmount: product.price,
-            customerName,
-            phone: customerPhone,
-            location: customerAddress,
-            category: product.category,
-            orderStatus: 'New',
-            secretKey: secretKey
-        });
-
-        await newOrder.save();
-
-        res.send(`
-            <script>
-                let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
-                savedOrdersData.push({ id: "${newOrder._id}", completedAt: null, isCart: false });
-                localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
-                alert('Order Placed Successfully! Secret Code: ${secretKey}');
-                window.location.href = '/view-orders';
-            </script>
-        `);
-    } catch (err) {
-        console.error('Error saving direct order:', err);
-        res.status(500).send('Server Error during order placement');
-    }
-});
-
-// ✅ CART ORDER ROUTE (Saves to CartOrder Table)
+// ✅ 1. CART ORDER ROUTE (FIX: Isko pehle add kiya hai taaki /order/:id isko interfere na kare)
 app.post('/order/cart', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress, items, totalAmount } = req.body;
@@ -234,6 +196,56 @@ app.post('/order/cart', async (req, res) => {
     }
 });
 
+// ✅ 2. SINGLE DIRECT PRODUCT ORDER ROUTE (Saves to Order Model)
+app.post('/order/:id', async (req, res) => {
+    try {
+        const { customerName, customerPhone, customerAddress } = req.body;
+        const productId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).send('Invalid Product ID');
+        }
+
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).send('Product not found');
+
+        const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
+
+        const newOrder = new Order({
+            product: product._id,
+            items: [{
+                product: product._id,
+                title: product.title,
+                price: product.price,
+                quantity: 1,
+                image: product.images && product.images.length > 0 ? product.images[0] : ''
+            }],
+            totalAmount: product.price,
+            customerName,
+            phone: customerPhone,
+            location: customerAddress,
+            category: product.category,
+            orderStatus: 'New',
+            secretKey: secretKey
+        });
+
+        await newOrder.save();
+
+        res.send(`
+            <script>
+                let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
+                savedOrdersData.push({ id: "${newOrder._id}", completedAt: null, isCart: false });
+                localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
+                alert('Order Placed Successfully! Secret Code: ${secretKey}');
+                window.location.href = '/view-orders';
+            </script>
+        `);
+    } catch (err) {
+        console.error('Error saving direct order:', err);
+        res.status(500).send('Server Error during order placement');
+    }
+});
+
 app.get('/view-orders', async (req, res) => {
     try {
         res.render('customer-orders', { cart: null });
@@ -243,7 +255,7 @@ app.get('/view-orders', async (req, res) => {
     }
 });
 
-// ✅ API Route to Fetch Orders (Checks Both Order & CartOrder Tables)
+// API Route to Fetch Orders
 app.post('/api/customer-orders', async (req, res) => {
     try {
         const { orderIds } = req.body;
@@ -251,10 +263,11 @@ app.post('/api/customer-orders', async (req, res) => {
             return res.json([]);
         }
 
-        const normalOrders = await Order.find({ _id: { $in: orderIds } }).populate('product').lean();
-        const cartOrders = await CartOrder.find({ _id: { $in: orderIds } }).lean();
+        const validObjectIds = orderIds.filter(id => mongoose.Types.ObjectId.isValid(id));
 
-        // Tag cart orders to distinguish if needed
+        const normalOrders = await Order.find({ _id: { $in: validObjectIds } }).populate('product').lean();
+        const cartOrders = await CartOrder.find({ _id: { $in: validObjectIds } }).lean();
+
         const taggedCartOrders = cartOrders.map(o => ({ ...o, isCartOrder: true }));
 
         const allOrders = [...normalOrders, ...taggedCartOrders];
@@ -271,7 +284,12 @@ app.post('/api/customer-orders', async (req, res) => {
 app.post('/product/:id/reviews', async (req, res) => {
     try {
         const { user, rating, comment } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('Invalid Product ID');
+        }
+
         const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).send('Product not found');
 
         product.reviews.push({ user, rating: Number(rating), comment });
         await product.save();
@@ -341,12 +359,13 @@ app.get('/delivery/dashboard', isDeliveryLoggedIn, async (req, res) => {
 app.post('/delivery/complete-order/:id', isDeliveryLoggedIn, async (req, res) => {
     try {
         const { enteredKey } = req.body;
-        let order = await Order.findById(req.params.id);
-        let isCart = false;
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('Invalid Order ID');
+        }
 
+        let order = await Order.findById(req.params.id);
         if (!order) {
             order = await CartOrder.findById(req.params.id);
-            isCart = true;
         }
 
         if (!order) return res.status(404).send('Order not found');
@@ -375,7 +394,34 @@ app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// Category Specific Orders Management
+// Multi-Item Orders Route
+app.get('/admin/orders/multi-item', isAdminLoggedIn, async (req, res) => {
+    try {
+        const categoryName = 'Multi-Item Orders (Cart)';
+
+        const newOrders = await CartOrder.find({ orderStatus: 'New' }).sort({ createdAt: -1 });
+        const packedOrders = await CartOrder.find({ orderStatus: 'Packed' }).sort({ createdAt: -1 });
+        const outForDeliveryOrders = await CartOrder.find({ orderStatus: 'Out For Delivery' }).sort({ createdAt: -1 });
+        const deliveredOrders = await CartOrder.find({ orderStatus: 'Delivered' }).sort({ createdAt: -1 });
+        const canceledOrders = await CartOrder.find({ orderStatus: 'Canceled' }).sort({ createdAt: -1 });
+
+        res.render('admin/category-management', {
+            categoryName,
+            products: [],
+            newOrders,
+            packedOrders,
+            outForDeliveryOrders,
+            deliveredOrders,
+            canceledOrders,
+            deliveryBoys: getDeliveryBoys()
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Category Specific Orders
 app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
     try {
         const categoryName = req.params.categoryName;
@@ -403,36 +449,11 @@ app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// ✅ Multi-Item Orders (Cart Table) Management Route
-app.get('/admin/orders/multi-item', isAdminLoggedIn, async (req, res) => {
-    try {
-        const categoryName = 'Multi-Item Orders (Cart)';
-
-        const newOrders = await CartOrder.find({ orderStatus: 'New' }).sort({ createdAt: -1 });
-        const packedOrders = await CartOrder.find({ orderStatus: 'Packed' }).sort({ createdAt: -1 });
-        const outForDeliveryOrders = await CartOrder.find({ orderStatus: 'Out For Delivery' }).sort({ createdAt: -1 });
-        const deliveredOrders = await CartOrder.find({ orderStatus: 'Delivered' }).sort({ createdAt: -1 });
-        const canceledOrders = await CartOrder.find({ orderStatus: 'Canceled' }).sort({ createdAt: -1 });
-
-        res.render('admin/category-management', {
-            categoryName,
-            products: [],
-            newOrders,
-            packedOrders,
-            outForDeliveryOrders,
-            deliveredOrders,
-            canceledOrders,
-            deliveryBoys: getDeliveryBoys()
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
 // ================= ORDER LIFECYCLE ACTIONS (ADMIN) =================
 app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('back');
+
         let order = await Order.findById(req.params.id);
         if (!order) order = await CartOrder.findById(req.params.id);
 
@@ -449,6 +470,8 @@ app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
 
 app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('back');
+
         const { deliveryBoyId, manualSecretCode } = req.body;
         let order = await Order.findById(req.params.id);
         if (!order) order = await CartOrder.findById(req.params.id);
@@ -470,6 +493,8 @@ app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
 
 app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('back');
+
         const { status, cancelReason } = req.body;
         let order = await Order.findById(req.params.id);
         if (!order) order = await CartOrder.findById(req.params.id);
@@ -490,6 +515,8 @@ app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
 
 app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('back');
+
         let deleted = await Order.findByIdAndDelete(req.params.id);
         if (!deleted) await CartOrder.findByIdAndDelete(req.params.id);
         res.redirect('back');
@@ -531,6 +558,8 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
 
 app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('back');
+
         await Product.findByIdAndDelete(req.params.id);
         res.redirect('back');
     } catch (err) {
@@ -559,6 +588,8 @@ app.get('/admin/products', isAdminLoggedIn, async (req, res) => {
 
 app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('/admin/dashboard');
+
         const product = await Product.findById(req.params.id);
         if (!product) return res.redirect('/admin/dashboard');
         res.render('admin/edit-product-form', { product });
@@ -573,6 +604,8 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
     { name: 'videos', maxCount: 5 }
 ]), async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.redirect('/admin/dashboard');
+
         const { title, brand, price, description, category, whatsappNumber, returnPolicy } = req.body;
         const updateData = { title, brand, description, category, whatsappNumber, returnPolicy };
 
