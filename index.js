@@ -92,7 +92,7 @@ app.get('/product/:id', async (req, res) => {
     }
 });
 
-// ================= CART MANAGEMENT (Client LocalStorage Supported) =================
+// ================= CART MANAGEMENT & CHECKOUT ROUTES =================
 const addToCartHandler = async (req, res) => {
     try {
         const productId = req.params.id;
@@ -142,6 +142,17 @@ const addToCartHandler = async (req, res) => {
 app.post('/cart/add/:id', addToCartHandler);
 app.get('/cart/add/:id', addToCartHandler);
 
+// ✅ FIXED: Checkout Route to fix "Cannot GET /checkout" error
+app.get('/checkout', (req, res) => {
+    try {
+        // Renders checkout view or passes cart details to the checkout page form
+        res.render('checkout', { cart: req.session.cart || { items: [], totalQty: 0, totalPrice: 0 } });
+    } catch (err) {
+        console.error('Error opening checkout:', err);
+        res.redirect('/');
+    }
+});
+
 // Handle Order Submission with Secret Key Generation & LocalStorage Sync
 app.post('/order/:id', async (req, res) => {
     try {
@@ -151,9 +162,8 @@ app.post('/order/:id', async (req, res) => {
         let orderItems = [];
         let calculatedTotal = 0;
         let orderCategory = '';
-        let isCartCheckout = false; // ✅ Track if this is cart checkout
+        let isCartCheckout = false; 
 
-        // Handle multi-item checkout from LocalStorage / Request body safely
         let parsedItems = items;
         if (typeof items === 'string') {
             try {
@@ -163,8 +173,9 @@ app.post('/order/:id', async (req, res) => {
             }
         }
 
+        // If items are passed via array (Multi-item cart checkout)
         if (parsedItems && Array.isArray(parsedItems) && parsedItems.length > 0) {
-            isCartCheckout = true; // ✅ Multi-item = cart checkout
+            isCartCheckout = true; 
             orderItems = parsedItems.map(item => ({
                 product: item.productId || item.id,
                 title: item.title || 'Product',
@@ -174,15 +185,23 @@ app.post('/order/:id', async (req, res) => {
             }));
             calculatedTotal = totalAmount ? Number(totalAmount) : orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             
-            const firstProdId = orderItems[0].product;
-            if (firstProdId && mongoose.Types.ObjectId.isValid(firstProdId)) {
-                const firstProd = await Product.findById(firstProdId);
-                orderCategory = firstProd ? firstProd.category : 'General';
+            // If more than 1 item or general cart checkout, categorize as Multi-Item or use first item's category if single item from cart
+            if (orderItems.length > 1) {
+                orderCategory = 'Multi-Item Order';
             } else {
-                orderCategory = 'General';
+                const firstProdId = orderItems[0].product;
+                if (firstProdId && mongoose.Types.ObjectId.isValid(firstProdId)) {
+                    const firstProd = await Product.findById(firstProdId);
+                    orderCategory = firstProd ? firstProd.category : 'General';
+                } else {
+                    orderCategory = 'General';
+                }
             }
         } else {
-            const product = await Product.findById(productId);
+            // Single Item Direct Order (either from product page or single item cart action)
+            const targetId = (productId === 'cart') ? (req.session.cart && req.session.cart.items[0] ? req.session.cart.items[0].productId : null) : productId;
+            
+            const product = await Product.findById(targetId);
             if (!product) {
                 return res.status(404).send('Product not found');
             }
@@ -194,13 +213,17 @@ app.post('/order/:id', async (req, res) => {
                 image: product.images && product.images.length > 0 ? product.images[0] : ''
             }];
             calculatedTotal = product.price;
-            orderCategory = product.category;
+            orderCategory = product.category; // Single item goes to its own category section
+            
+            if (productId === 'cart') {
+                isCartCheckout = true;
+            }
         }
 
         // Generate a 4-digit random secret key for delivery verification
         const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
 
-        const primaryProdRef = (productId && productId !== 'cart' && mongoose.Types.ObjectId.isValid(productId)) 
+        const primaryProdRef = (productId && productId !== 'cart' && productId !== 'all' && mongoose.Types.ObjectId.isValid(productId)) 
             ? productId 
             : (orderItems[0] && orderItems[0].product && mongoose.Types.ObjectId.isValid(orderItems[0].product) ? orderItems[0].product : null);
 
@@ -218,8 +241,8 @@ app.post('/order/:id', async (req, res) => {
 
         await newOrder.save();
         
-        // ✅ ONLY clear cart if it's a cart checkout (multiple items)
-        if (isCartCheckout && req.session.cart) {
+        // Clear server session cart upon successful order placement
+        if (req.session.cart) {
             req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
         }
 
@@ -239,10 +262,8 @@ app.post('/order/:id', async (req, res) => {
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
                 localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
                 
-                // ✅ ONLY clear localStorage cart if it's a cart checkout
-                if (${isCartCheckout}) {
-                    localStorage.removeItem('gkp_cart');
-                }
+                // Clear localStorage cart
+                localStorage.removeItem('gkp_cart');
 
                 alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
                 window.location.href = '/view-orders';
@@ -254,10 +275,8 @@ app.post('/order/:id', async (req, res) => {
     }
 });
 
-// ✅ NEW ROUTE: Do NOT sync server cart - use only localStorage
 app.get('/view-orders', async (req, res) => {
     try {
-        // Send EMPTY cart object - frontend will use localStorage instead
         res.render('customer-orders', { cart: null });
     } catch (err) {
         console.error(err);
