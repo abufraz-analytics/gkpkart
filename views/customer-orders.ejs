@@ -534,9 +534,10 @@
     </div>
 
     <script>
-        let currentOrderItem = null; // Track which cart item is being ordered
+        let currentOrderItem = null; // Track single cart item being ordered
+        let isCheckoutAll = false;  // Flag to know if we are checking out the whole cart
 
-        // --- Server Cart Sync (Fixes cart synchronization) ---
+        // --- Server Cart Sync ---
         <% if (typeof cart !== 'undefined' && cart && cart.length > 0) { %>
             try {
                 let serverCart = <%- JSON.stringify(cart) %>;
@@ -603,6 +604,7 @@
             if (!item) return;
 
             currentOrderItem = item;
+            isCheckoutAll = false;
 
             // Show product info
             document.getElementById('modalProductInfo').innerHTML = `
@@ -612,6 +614,33 @@
 
             // Clear form
             document.getElementById('orderForm').reset();
+            document.getElementById('orderForm').style.display = 'block';
+            document.getElementById('otpMessage').style.display = 'none';
+
+            // Show modal
+            document.getElementById('orderModal').style.display = 'block';
+        }
+
+        // Open Order Modal for Checking Out ALL Cart Items
+        function checkoutCart() {
+            let cart = getCart();
+            if (cart.length === 0) return;
+
+            isCheckoutAll = true;
+            currentOrderItem = null;
+
+            let grandTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+            // Show cart summary info in modal
+            document.getElementById('modalProductInfo').innerHTML = `
+                <strong>Complete Cart Checkout</strong><br>
+                Total Items: ${totalItemsCount} | Grand Total: <strong>₹${grandTotal}</strong>
+            `;
+
+            // Clear form
+            document.getElementById('orderForm').reset();
+            document.getElementById('orderForm').style.display = 'block';
             document.getElementById('otpMessage').style.display = 'none';
 
             // Show modal
@@ -621,13 +650,12 @@
         function closeOrderModal() {
             document.getElementById('orderModal').style.display = 'none';
             currentOrderItem = null;
+            isCheckoutAll = false;
         }
 
-        // Submit individual order from cart
+        // Submit Order from Cart (Handles both Single Item or Checkout All)
         function submitOrderFromCart(event) {
             event.preventDefault();
-
-            if (!currentOrderItem) return;
 
             let customerName = document.getElementById('modalCustomerName').value.trim();
             let customerPhone = document.getElementById('modalCustomerPhone').value.trim();
@@ -638,18 +666,39 @@
                 return;
             }
 
-            // Create order item array with single item
-            let orderItems = [{
-                productId: currentOrderItem.id,
-                id: currentOrderItem.id,
-                title: currentOrderItem.title,
-                price: currentOrderItem.price,
-                qty: currentOrderItem.qty,
-                quantity: currentOrderItem.qty,
-                image: currentOrderItem.image
-            }];
+            let orderItems = [];
+            let totalAmount = 0;
 
-            let totalAmount = currentOrderItem.price * currentOrderItem.qty;
+            if (isCheckoutAll) {
+                let cart = getCart();
+                if (cart.length === 0) return;
+
+                orderItems = cart.map(item => ({
+                    productId: item.id,
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    qty: item.qty,
+                    quantity: item.qty,
+                    image: item.image
+                }));
+
+                totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            } else {
+                if (!currentOrderItem) return;
+
+                orderItems = [{
+                    productId: currentOrderItem.id,
+                    id: currentOrderItem.id,
+                    title: currentOrderItem.title,
+                    price: currentOrderItem.price,
+                    qty: currentOrderItem.qty,
+                    quantity: currentOrderItem.qty,
+                    image: currentOrderItem.image
+                }];
+
+                totalAmount = currentOrderItem.price * currentOrderItem.qty;
+            }
 
             // Send to backend
             fetch('/order/cart', {
@@ -666,23 +715,27 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show success message
+                    // Show success message with secret key
                     document.getElementById('otpMessage').innerHTML = 
                         `✅ Order placed successfully! Your secret code is <strong>${data.secretKey}</strong>. Share this with delivery boy.`;
                     document.getElementById('otpMessage').style.display = 'block';
                     document.getElementById('orderForm').style.display = 'none';
 
-                    // Remove item from cart
+                    // Clear cart accordingly
                     let cart = getCart();
-                    cart = cart.filter(i => i.id !== currentOrderItem.id);
-                    saveCart(cart);
+                    if (isCheckoutAll) {
+                        saveCart([]); // Clear all
+                    } else if (currentOrderItem) {
+                        cart = cart.filter(i => i.id !== currentOrderItem.id);
+                        saveCart(cart); // Clear single item
+                    }
 
-                    // Close modal after 3 seconds and refresh orders
+                    // Close modal after 3 seconds and refresh orders list
                     setTimeout(() => {
                         closeOrderModal();
                         document.getElementById('orderForm').style.display = 'block';
                         document.getElementById('otpMessage').style.display = 'none';
-                        fetchMyOrders(); // Refresh orders list
+                        fetchMyOrders(); 
                     }, 3000);
                 } else {
                     alert('Error placing order: ' + (data.error || 'Unknown error'));
@@ -740,14 +793,6 @@
             `;
 
             cartContainer.innerHTML = html;
-        }
-
-        function checkoutCart() {
-            let cart = getCart();
-            if (cart.length === 0) return;
-            
-            localStorage.setItem('gkp_checkout_items', JSON.stringify(cart));
-            window.location.href = '/checkout'; 
         }
 
         // --- Order Tracking Logic ---
@@ -812,11 +857,9 @@
                     let productImg = '';
 
                     if (order.items && order.items.length > 0) {
-                        // Multi-item order
                         productTitle = order.items.length + ' items in order';
                         productImg = order.items[0].image || (order.items[0].product && order.items[0].product.images ? order.items[0].product.images[0] : '');
                     } else if (order.product) {
-                        // Single item order
                         productTitle = order.product.title;
                         productPrice = '₹' + order.product.price;
                         productImg = order.product.images && order.product.images.length > 0 ? order.product.images[0] : '';
