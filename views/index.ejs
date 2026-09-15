@@ -41,26 +41,34 @@
             transition: all 0.3s ease-in-out;
         }
 
-        /* Header Styles */
+        /* Header Styles with Smooth Grid Animation */
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 12px 16px;
+            padding: 0 16px;
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            overflow: hidden;
+        }
+
+        .header-content {
+            min-height: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: transform 0.3s ease, height 0.3s ease, padding 0.3s ease;
-            overflow: hidden;
             height: 60px;
+            transition: opacity 0.3s ease;
         }
 
-        /* Class to Hide Header smoothly on Downward Scroll */
+        /* Smooth Hide Class */
         .sticky-wrapper.hide-header header {
-            height: 0;
-            padding-top: 0;
-            padding-bottom: 0;
+            grid-template-rows: 0fr;
             opacity: 0;
-            transform: translateY(-100%);
+        }
+
+        .sticky-wrapper.hide-header .header-content {
+            opacity: 0;
         }
 
         .logo-area {
@@ -284,8 +292,7 @@
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
-            header {
-                padding: 10px 12px;
+            .header-content {
                 height: 52px;
             }
             .logo-area {
@@ -317,14 +324,16 @@
     <!-- Sticky Header Wrapper -->
     <div class="sticky-wrapper" id="stickyWrapper">
         <header>
-            <!-- Logo Left Side -->
-            <div class="logo-area" id="logoClick">🛒 GkpKart</div>
+            <div class="header-content">
+                <!-- Logo Left Side -->
+                <div class="logo-area" id="logoClick">🛒 GkpKart</div>
 
-            <!-- Buttons Right Side -->
-            <div class="nav-links">
-                <a href="/view-orders" class="view-order-btn">View Order</a>
-                <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Delivery</a>
-                <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Admin</a>
+                <!-- Buttons Right Side -->
+                <div class="nav-links">
+                    <a href="/view-orders" class="view-order-btn">View Order</a>
+                    <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Delivery</a>
+                    <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Admin</a>
+                </div>
             </div>
         </header>
 
@@ -388,7 +397,7 @@
             }
         });
 
-        // Dynamic Header Hide/Show on Scroll Logic (Fixed Bottom Flickering)
+        // Dynamic Header Hide/Show on Scroll Logic (Fixed Bottom Flickering & Smooth Transition)
         let lastScrollY = window.scrollY;
         const stickyWrapper = document.getElementById('stickyWrapper');
 
