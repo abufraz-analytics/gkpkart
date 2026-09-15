@@ -5,6 +5,7 @@ const session = require('express-session');
 
 const Product = require('./models/product');
 const Order = require('./models/order');
+const CartOrder = require('./models/cartOrder'); // Naya CartOrder model import kiya
 const { upload } = require('./utils/cloudinary');
 
 dotenv.config();
@@ -43,7 +44,7 @@ const getDeliveryBoys = () => {
     ];
 };
 
-// Home route with Category filter and Flexible Search functionality
+// Home route
 app.get('/', async (req, res) => {
     try {
         let searchQuery = req.query.search ? req.query.search.trim() : '';
@@ -96,24 +97,18 @@ app.get('/product/:id', async (req, res) => {
 const addToCartHandler = async (req, res) => {
     try {
         const productId = req.params.id;
-        
-        if (productId === 'back') {
-            return res.redirect('/');
-        }
+        if (productId === 'back') return res.redirect('/');
 
         const product = await Product.findById(productId);
-        
-        if (!product) {
-            return res.status(404).send('Product not found');
-        }
+        if (!product) return res.status(404).send('Product not found');
 
         if (!req.session.cart) {
             req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
         }
 
         let cart = req.session.cart;
-        
         let existingItem = cart.items.find(item => (item.productId && item.productId.toString() === productId) || (item.id === productId));
+        
         if (existingItem) {
             existingItem.quantity = (existingItem.quantity || existingItem.qty || 1) + 1;
             existingItem.qty = existingItem.quantity;
@@ -142,10 +137,8 @@ const addToCartHandler = async (req, res) => {
 app.post('/cart/add/:id', addToCartHandler);
 app.get('/cart/add/:id', addToCartHandler);
 
-// ✅ FIXED: Checkout Route to fix "Cannot GET /checkout" error
 app.get('/checkout', (req, res) => {
     try {
-        // Renders checkout view or passes cart details to the checkout page form
         res.render('checkout', { cart: req.session.cart || { items: [], totalQty: 0, totalPrice: 0 } });
     } catch (err) {
         console.error('Error opening checkout:', err);
@@ -153,125 +146,91 @@ app.get('/checkout', (req, res) => {
     }
 });
 
-// Handle Order Submission with Secret Key Generation & LocalStorage Sync
+// Single Direct Product Order Route (Category Table Me Jata Hai)
 app.post('/order/:id', async (req, res) => {
     try {
-        const { customerName, customerPhone, customerAddress, items, totalAmount } = req.body;
+        const { customerName, customerPhone, customerAddress } = req.body;
         const productId = req.params.id;
         
-        let orderItems = [];
-        let calculatedTotal = 0;
-        let orderCategory = '';
-        let isCartCheckout = false; 
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).send('Product not found');
 
-        let parsedItems = items;
-        if (typeof items === 'string') {
-            try {
-                parsedItems = JSON.parse(items);
-            } catch (e) {
-                parsedItems = [];
-            }
-        }
+        const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
 
-        // If items are passed via array (Multi-item cart checkout)
-        if (parsedItems && Array.isArray(parsedItems) && parsedItems.length > 0) {
-            isCartCheckout = true; 
-            orderItems = parsedItems.map(item => ({
-                product: item.productId || item.id,
-                title: item.title || 'Product',
-                price: item.price || 0,
-                quantity: item.quantity || item.qty || 1,
-                image: item.image || ''
-            }));
-            calculatedTotal = totalAmount ? Number(totalAmount) : orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            // If more than 1 item or general cart checkout, categorize as Multi-Item or use first item's category if single item from cart
-            if (orderItems.length > 1) {
-                orderCategory = 'Multi-Item Order';
-            } else {
-                const firstProdId = orderItems[0].product;
-                if (firstProdId && mongoose.Types.ObjectId.isValid(firstProdId)) {
-                    const firstProd = await Product.findById(firstProdId);
-                    orderCategory = firstProd ? firstProd.category : 'General';
-                } else {
-                    orderCategory = 'General';
-                }
-            }
-        } else {
-            // Single Item Direct Order (either from product page or single item cart action)
-            const targetId = (productId === 'cart') ? (req.session.cart && req.session.cart.items[0] ? req.session.cart.items[0].productId : null) : productId;
-            
-            const product = await Product.findById(targetId);
-            if (!product) {
-                return res.status(404).send('Product not found');
-            }
-            orderItems = [{
+        const newOrder = new Order({
+            product: product._id,
+            items: [{
                 product: product._id,
                 title: product.title,
                 price: product.price,
                 quantity: 1,
                 image: product.images && product.images.length > 0 ? product.images[0] : ''
-            }];
-            calculatedTotal = product.price;
-            orderCategory = product.category; // Single item goes to its own category section
-            
-            if (productId === 'cart') {
-                isCartCheckout = true;
-            }
-        }
-
-        // Generate a 4-digit random secret key for delivery verification
-        const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
-
-        const primaryProdRef = (productId && productId !== 'cart' && productId !== 'all' && mongoose.Types.ObjectId.isValid(productId)) 
-            ? productId 
-            : (orderItems[0] && orderItems[0].product && mongoose.Types.ObjectId.isValid(orderItems[0].product) ? orderItems[0].product : null);
-
-        const newOrder = new Order({
-            product: primaryProdRef,
-            items: orderItems,
-            totalAmount: calculatedTotal,
+            }],
+            totalAmount: product.price,
             customerName,
             phone: customerPhone,
             location: customerAddress,
-            category: orderCategory,
+            category: product.category,
             orderStatus: 'New',
             secretKey: secretKey
         });
 
         await newOrder.save();
-        
-        // Clear server session cart upon successful order placement
-        if (req.session.cart) {
-            req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
-        }
 
         res.send(`
             <script>
                 let savedOrdersData = JSON.parse(localStorage.getItem('gkp_my_orders_with_time') || '[]');
-                
-                if (savedOrdersData.length === 0) {
-                    let oldIds = JSON.parse(localStorage.getItem('gkp_my_orders') || '[]');
-                    if (oldIds.length > 0) {
-                        savedOrdersData = oldIds.map(id => ({ id: id, completedAt: null }));
-                    }
-                }
-
-                savedOrdersData.push({ id: "${newOrder._id}", completedAt: null });
-
+                savedOrdersData.push({ id: "${newOrder._id}", completedAt: null, isCart: false });
                 localStorage.setItem('gkp_my_orders_with_time', JSON.stringify(savedOrdersData));
-                localStorage.setItem('gkp_my_orders', JSON.stringify(savedOrdersData.map(item => item.id)));
-                
-                // Clear localStorage cart
-                localStorage.removeItem('gkp_cart');
-
-                alert('Order Placed Successfully! Your Secret Code is ${secretKey}');
+                alert('Order Placed Successfully! Secret Code: ${secretKey}');
                 window.location.href = '/view-orders';
             </script>
         `);
     } catch (err) {
-        console.error('Error saving order:', err.message);
+        console.error('Error saving direct order:', err);
         res.status(500).send('Server Error during order placement');
+    }
+});
+
+// ✅ CART ORDER ROUTE (Saves to CartOrder Table)
+app.post('/order/cart', async (req, res) => {
+    try {
+        const { customerName, customerPhone, customerAddress, items, totalAmount } = req.body;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, error: 'No items in cart order' });
+        }
+
+        const formattedItems = items.map(item => ({
+            product: (item.productId && mongoose.Types.ObjectId.isValid(item.productId)) ? item.productId : null,
+            title: item.title || 'Product',
+            price: Number(item.price) || 0,
+            quantity: Number(item.quantity || item.qty) || 1,
+            image: item.image || ''
+        }));
+
+        const secretKey = Math.floor(1000 + Math.random() * 9000).toString();
+
+        const newCartOrder = new CartOrder({
+            items: formattedItems,
+            totalAmount: Number(totalAmount),
+            customerName,
+            phone: customerPhone,
+            location: customerAddress,
+            orderStatus: 'New',
+            secretKey: secretKey
+        });
+
+        await newCartOrder.save();
+
+        if (req.session.cart) {
+            req.session.cart = { items: [], totalQty: 0, totalPrice: 0 };
+        }
+
+        res.json({ success: true, secretKey: secretKey, orderId: newCartOrder._id });
+    } catch (err) {
+        console.error('Error saving cart order:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -284,33 +243,37 @@ app.get('/view-orders', async (req, res) => {
     }
 });
 
-// API Route to fetch specific browser orders for customer tracking
+// ✅ API Route to Fetch Orders (Checks Both Order & CartOrder Tables)
 app.post('/api/customer-orders', async (req, res) => {
     try {
         const { orderIds } = req.body;
         if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
             return res.json([]);
         }
-        const orders = await Order.find({ _id: { $in: orderIds } }).populate('product').sort({ createdAt: -1 });
-        res.json(orders);
+
+        const normalOrders = await Order.find({ _id: { $in: orderIds } }).populate('product').lean();
+        const cartOrders = await CartOrder.find({ _id: { $in: orderIds } }).lean();
+
+        // Tag cart orders to distinguish if needed
+        const taggedCartOrders = cartOrders.map(o => ({ ...o, isCartOrder: true }));
+
+        const allOrders = [...normalOrders, ...taggedCartOrders];
+        allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json(allOrders);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server Error' });
     }
 });
 
-// Submit Review & Rating
+// Reviews Route
 app.post('/product/:id/reviews', async (req, res) => {
     try {
         const { user, rating, comment } = req.body;
         const product = await Product.findById(req.params.id);
 
-        product.reviews.push({
-            user,
-            rating: Number(rating),
-            comment
-        });
-
+        product.reviews.push({ user, rating: Number(rating), comment });
         await product.save();
         res.redirect(`/product/${req.params.id}`);
     } catch (err) {
@@ -319,17 +282,13 @@ app.post('/product/:id/reviews', async (req, res) => {
     }
 });
 
-// ================= ADMIN AUTHENTICATION =================
+// ================= AUTHENTICATION =================
 const isAdminLoggedIn = (req, res, next) => {
-    if (req.session && req.session.isAdmin) {
-        return next();
-    }
+    if (req.session && req.session.isAdmin) return next();
     res.redirect('/admin/login');
 };
 
-app.get('/admin/login', (req, res) => {
-    res.render('admin/login', { error: null });
-});
+app.get('/admin/login', (req, res) => res.render('admin/login', { error: null }));
 
 app.post('/admin/login', (req, res) => {
     const { username, password } = req.body;
@@ -341,23 +300,14 @@ app.post('/admin/login', (req, res) => {
     }
 });
 
-app.get('/admin/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/admin/login');
-    });
-});
+app.get('/admin/logout', (req, res) => req.session.destroy(() => res.redirect('/admin/login')));
 
-// ================= DELIVERY BOY AUTHENTICATION =================
 const isDeliveryLoggedIn = (req, res, next) => {
-    if (req.session && req.session.deliveryBoyId) {
-        return next();
-    }
+    if (req.session && req.session.deliveryBoyId) return next();
     res.redirect('/delivery/login');
 };
 
-app.get('/delivery/login', (req, res) => {
-    res.render('delivery/login', { error: null });
-});
+app.get('/delivery/login', (req, res) => res.render('delivery/login', { error: null }));
 
 app.post('/delivery/login', (req, res) => {
     const { deliveryId, password } = req.body;
@@ -372,49 +322,41 @@ app.post('/delivery/login', (req, res) => {
     }
 });
 
-app.get('/delivery/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/delivery/login');
-    });
-});
+app.get('/delivery/logout', (req, res) => req.session.destroy(() => res.redirect('/delivery/login')));
 
-// Delivery Boy Dashboard Route
 app.get('/delivery/dashboard', isDeliveryLoggedIn, async (req, res) => {
     try {
         const deliveryBoyId = req.session.deliveryBoyId;
-        const assignedOrders = await Order.find({ 
-            deliveryBoyId: deliveryBoyId, 
-            orderStatus: 'Out For Delivery' 
-        }).populate('product').sort({ createdAt: -1 });
+        const assignedNormalOrders = await Order.find({ deliveryBoyId, orderStatus: 'Out For Delivery' }).populate('product').lean();
+        const assignedCartOrders = await CartOrder.find({ deliveryBoyId, orderStatus: 'Out For Delivery' }).lean();
 
-        res.render('delivery/dashboard', { deliveryBoyId, orders: assignedOrders });
+        const orders = [...assignedNormalOrders, ...assignedCartOrders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        res.render('delivery/dashboard', { deliveryBoyId, orders });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
     }
 });
 
-// Delivery Boy: Submit Secret Key to Complete Delivery
 app.post('/delivery/complete-order/:id', isDeliveryLoggedIn, async (req, res) => {
     try {
         const { enteredKey } = req.body;
-        const order = await Order.findById(req.params.id);
+        let order = await Order.findById(req.params.id);
+        let isCart = false;
 
         if (!order) {
-            return res.status(404).send('Order not found');
+            order = await CartOrder.findById(req.params.id);
+            isCart = true;
         }
+
+        if (!order) return res.status(404).send('Order not found');
 
         if (order.secretKey === enteredKey.trim()) {
             order.orderStatus = 'Delivered';
             await order.save();
             res.redirect('/delivery/dashboard');
         } else {
-            res.send(`
-                <script>
-                    alert('Invalid Secret Key! Please check with customer.');
-                    window.location.href = '/delivery/dashboard';
-                </script>
-            `);
+            res.send(`<script>alert('Invalid Secret Key!'); window.location.href = '/delivery/dashboard';</script>`);
         }
     } catch (err) {
         console.error(err);
@@ -422,7 +364,7 @@ app.post('/delivery/complete-order/:id', isDeliveryLoggedIn, async (req, res) =>
     }
 });
 
-// ================= ADMIN DASHBOARD & CATEGORY MANAGEMENT =================
+// ================= ADMIN DASHBOARD & MANAGEMENT =================
 app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
     try {
         const products = await Product.find({}).sort({ createdAt: -1 });
@@ -433,7 +375,7 @@ app.get('/admin/dashboard', isAdminLoggedIn, async (req, res) => {
     }
 });
 
-// Category-Specific Management Page
+// Category Specific Orders Management
 app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
     try {
         const categoryName = req.params.categoryName;
@@ -461,10 +403,39 @@ app.get('/admin/category/:categoryName', isAdminLoggedIn, async (req, res) => {
     }
 });
 
+// ✅ Multi-Item Orders (Cart Table) Management Route
+app.get('/admin/orders/multi-item', isAdminLoggedIn, async (req, res) => {
+    try {
+        const categoryName = 'Multi-Item Orders (Cart)';
+
+        const newOrders = await CartOrder.find({ orderStatus: 'New' }).sort({ createdAt: -1 });
+        const packedOrders = await CartOrder.find({ orderStatus: 'Packed' }).sort({ createdAt: -1 });
+        const outForDeliveryOrders = await CartOrder.find({ orderStatus: 'Out For Delivery' }).sort({ createdAt: -1 });
+        const deliveredOrders = await CartOrder.find({ orderStatus: 'Delivered' }).sort({ createdAt: -1 });
+        const canceledOrders = await CartOrder.find({ orderStatus: 'Canceled' }).sort({ createdAt: -1 });
+
+        res.render('admin/category-management', {
+            categoryName,
+            products: [],
+            newOrders,
+            packedOrders,
+            outForDeliveryOrders,
+            deliveredOrders,
+            canceledOrders,
+            deliveryBoys: getDeliveryBoys()
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // ================= ORDER LIFECYCLE ACTIONS (ADMIN) =================
 app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
+        let order = await Order.findById(req.params.id);
+        if (!order) order = await CartOrder.findById(req.params.id);
+
         if (order) {
             order.orderStatus = 'Packed';
             await order.save();
@@ -479,7 +450,8 @@ app.post('/admin/order/pack/:id', isAdminLoggedIn, async (req, res) => {
 app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const { deliveryBoyId, manualSecretCode } = req.body;
-        const order = await Order.findById(req.params.id);
+        let order = await Order.findById(req.params.id);
+        if (!order) order = await CartOrder.findById(req.params.id);
         
         if (order) {
             order.deliveryBoyId = deliveryBoyId;
@@ -499,7 +471,8 @@ app.post('/admin/order/dispatch/:id', isAdminLoggedIn, async (req, res) => {
 app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const { status, cancelReason } = req.body;
-        const order = await Order.findById(req.params.id);
+        let order = await Order.findById(req.params.id);
+        if (!order) order = await CartOrder.findById(req.params.id);
         
         if (order) {
             order.orderStatus = status;
@@ -517,7 +490,8 @@ app.post('/admin/order/status/:id', isAdminLoggedIn, async (req, res) => {
 
 app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
     try {
-        await Order.findByIdAndDelete(req.params.id);
+        let deleted = await Order.findByIdAndDelete(req.params.id);
+        if (!deleted) await CartOrder.findByIdAndDelete(req.params.id);
         res.redirect('back');
     } catch (err) {
         console.error(err);
@@ -526,15 +500,7 @@ app.post('/admin/order/delete/:id', isAdminLoggedIn, async (req, res) => {
 });
 
 // ================= PRODUCT CRUD ROUTES =================
-
-app.get('/admin/add-product', isAdminLoggedIn, (req, res) => {
-    try {
-        res.render('admin/add-product');
-    } catch (err) {
-        console.error('Error rendering add product page:', err);
-        res.status(500).send('Server Error');
-    }
-});
+app.get('/admin/add-product', isAdminLoggedIn, (req, res) => res.render('admin/add-product'));
 
 app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
     { name: 'images', maxCount: 10 },
@@ -542,7 +508,7 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
 ]), async (req, res) => {
     try {
         if (!req.files || !req.files.images || req.files.images.length === 0) {
-            return res.status(400).send('Bad Request: At least one product image is required.');
+            return res.status(400).send('At least one product image is required.');
         }
 
         const imagePaths = req.files.images.map(file => file.path);
@@ -551,22 +517,15 @@ app.post('/admin/add-product', isAdminLoggedIn, upload.fields([
         const { title, brand, price, description, category, whatsappNumber, returnPolicy } = req.body;
         
         const newProduct = new Product({
-            title,
-            brand,
-            price: price ? Number(price) : 0,
-            description,
-            category,
-            images: imagePaths,
-            videos: videoPaths,
-            whatsappNumber,
-            returnPolicy: returnPolicy || "7 Days Replacement Policy"
+            title, brand, price: price ? Number(price) : 0, description, category,
+            images: imagePaths, videos: videoPaths, whatsappNumber, returnPolicy: returnPolicy || "7 Days Replacement Policy"
         });
 
         await newProduct.save();
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error adding product:', err);
-        res.status(500).send(`Server Error during product upload: ${err.message}`);
+        console.error(err);
+        res.status(500).send(`Server Error: ${err.message}`);
     }
 });
 
@@ -575,8 +534,8 @@ app.post('/admin/delete-product/:id', isAdminLoggedIn, async (req, res) => {
         await Product.findByIdAndDelete(req.params.id);
         res.redirect('back');
     } catch (err) {
-        console.error('Error deleting product:', err.message);
-        res.status(500).send('Server Error during product deletion');
+        console.error(err);
+        res.status(500).send('Server Error');
     }
 });
 
@@ -587,17 +546,13 @@ app.get('/admin/products', isAdminLoggedIn, async (req, res) => {
 
         if (searchQuery) {
             const searchRegex = new RegExp(searchQuery, 'i');
-            query.$or = [
-                { title: searchRegex },
-                { brand: searchRegex },
-                { description: searchRegex }
-            ];
+            query.$or = [{ title: searchRegex }, { brand: searchRegex }, { description: searchRegex }];
         }
 
         const products = await Product.find(query).sort({ createdAt: -1 });
         res.render('admin/edit-product', { products, searchQuery });
     } catch (err) {
-        console.error('Error fetching products for management:', err);
+        console.error(err);
         res.status(500).send('Server Error');
     }
 });
@@ -605,12 +560,10 @@ app.get('/admin/products', isAdminLoggedIn, async (req, res) => {
 app.get('/admin/edit-product/:id', isAdminLoggedIn, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) {
-            return res.redirect('/admin/dashboard');
-        }
+        if (!product) return res.redirect('/admin/dashboard');
         res.render('admin/edit-product-form', { product });
     } catch (err) {
-        console.error('Error fetching product for edit:', err.message);
+        console.error(err);
         res.redirect('/admin/dashboard');
     }
 });
@@ -621,36 +574,18 @@ app.post('/admin/edit-product/:id', isAdminLoggedIn, upload.fields([
 ]), async (req, res) => {
     try {
         const { title, brand, price, description, category, whatsappNumber, returnPolicy } = req.body;
-        
-        const updateData = {
-            title,
-            brand,
-            description,
-            category,
-            whatsappNumber,
-            returnPolicy
-        };
+        const updateData = { title, brand, description, category, whatsappNumber, returnPolicy };
 
-        if (price) {
-            updateData.price = Number(price);
-        }
-
-        if (req.files && req.files.images && req.files.images.length > 0) {
-            updateData.images = req.files.images.map(file => file.path);
-        }
-
-        if (req.files && req.files.videos && req.files.videos.length > 0) {
-            updateData.videos = req.files.videos.map(file => file.path);
-        }
+        if (price) updateData.price = Number(price);
+        if (req.files && req.files.images && req.files.images.length > 0) updateData.images = req.files.images.map(file => file.path);
+        if (req.files && req.files.videos && req.files.videos.length > 0) updateData.videos = req.files.videos.map(file => file.path);
 
         await Product.findByIdAndUpdate(req.params.id, updateData);
         res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Error updating product:', err);
-        res.status(500).send(`Server Error during product update: ${err.message}`);
+        console.error(err);
+        res.status(500).send(`Server Error: ${err.message}`);
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
