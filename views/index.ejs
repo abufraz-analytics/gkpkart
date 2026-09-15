@@ -28,47 +28,40 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.5;
-            padding-top: 0; /* Handled via Javascript/Sticky Header */
         }
 
-        /* Top Fixed Sticky Container */
+        /* Top Fixed Sticky Container with Super Smooth Transition */
         .sticky-wrapper {
             position: sticky;
             top: 0;
             z-index: 1000;
             background: var(--bg-color);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease-in-out;
+            /* Smooth Slide Animation using cubic-bezier */
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            will-change: transform;
         }
 
-        /* Header Styles with Smooth Grid Animation */
+        /* Pure Header Section ko Upar Sliding Effect dena */
+        .sticky-wrapper.hide-header {
+            transform: translateY(-60px); /* Height of header */
+        }
+
+        @media (max-width: 768px) {
+            .sticky-wrapper.hide-header {
+                transform: translateY(-52px); /* Mobile Height adjustment */
+            }
+        }
+
+        /* Header Styles */
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 0 16px;
-            display: grid;
-            grid-template-rows: 1fr;
-            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-            overflow: hidden;
-        }
-
-        .header-content {
-            min-height: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             height: 60px;
-            transition: opacity 0.3s ease;
-        }
-
-        /* Smooth Hide Class */
-        .sticky-wrapper.hide-header header {
-            grid-template-rows: 0fr;
-            opacity: 0;
-        }
-
-        .sticky-wrapper.hide-header .header-content {
-            opacity: 0;
         }
 
         .logo-area {
@@ -292,7 +285,7 @@
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
-            .header-content {
+            header {
                 height: 52px;
             }
             .logo-area {
@@ -324,16 +317,14 @@
     <!-- Sticky Header Wrapper -->
     <div class="sticky-wrapper" id="stickyWrapper">
         <header>
-            <div class="header-content">
-                <!-- Logo Left Side -->
-                <div class="logo-area" id="logoClick">🛒 GkpKart</div>
+            <!-- Logo Left Side -->
+            <div class="logo-area" id="logoClick">🛒 GkpKart</div>
 
-                <!-- Buttons Right Side -->
-                <div class="nav-links">
-                    <a href="/view-orders" class="view-order-btn">View Order</a>
-                    <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Delivery</a>
-                    <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Admin</a>
-                </div>
+            <!-- Buttons Right Side -->
+            <div class="nav-links">
+                <a href="/view-orders" class="view-order-btn">View Order</a>
+                <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Delivery</a>
+                <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Admin</a>
             </div>
         </header>
 
@@ -397,21 +388,21 @@
             }
         });
 
-        // Dynamic Header Hide/Show on Scroll Logic (Fixed Bottom Flickering & Smooth Transition)
+        // Dynamic Smooth Header Hide/Show on Scroll Logic
         let lastScrollY = window.scrollY;
         const stickyWrapper = document.getElementById('stickyWrapper');
 
         window.addEventListener('scroll', () => {
             const currentScrollY = window.scrollY;
 
-            // Page ke ekdam bottom pahunchne par trigger na ho (Flicker Guard)
-            const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 20);
+            // Page ke bottom par scroll glitch avoid karne ke liye
+            const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 30);
 
-            // Niche scroll karne par YA page ke ekdam bottom par rehne par header HIDE rahega
-            if ((currentScrollY > lastScrollY && currentScrollY > 60) || isAtBottom) {
+            // Niche scroll karne par header smooth tarike se slide up hokar hide ho jayega
+            if (currentScrollY > lastScrollY && currentScrollY > 50) {
                 stickyWrapper.classList.add('hide-header');
             } 
-            // Upar scroll karne par HI show hoga (jab tak bottom par na ho)
+            // Upar scroll karne par header smooth tarike se waapas downward slide hoga
             else if (currentScrollY < lastScrollY && !isAtBottom) {
                 stickyWrapper.classList.remove('hide-header');
             }
