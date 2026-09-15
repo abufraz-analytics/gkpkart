@@ -372,40 +372,43 @@
     </div>
 
     <script>
-        // 4-Clicks Logic on Logo to reveal Login Buttons
-        let clickCount = 0;
-        const logo = document.getElementById('logoClick');
-        const adminBtn = document.getElementById('adminLoginBtn');
-        const deliveryBtn = document.getElementById('deliveryLoginBtn');
+    // 4-Clicks Logic on Logo to reveal Login Buttons
+    let clickCount = 0;
+    const logo = document.getElementById('logoClick');
+    const adminBtn = document.getElementById('adminLoginBtn');
+    const deliveryBtn = document.getElementById('deliveryLoginBtn');
 
-        logo.addEventListener('click', () => {
-            clickCount++;
-            if (clickCount >= 4) {
-                adminBtn.style.display = 'inline-block';
-                deliveryBtn.style.display = 'inline-block';
-                alert('Admin & Delivery Login unlocked!');
-                clickCount = 0;
-            }
-        });
+    logo.addEventListener('click', () => {
+        clickCount++;
+        if (clickCount >= 4) {
+            adminBtn.style.display = 'inline-block';
+            deliveryBtn.style.display = 'inline-block';
+            alert('Admin & Delivery Login unlocked!');
+            clickCount = 0;
+        }
+    });
 
-        // Dynamic Header Hide/Show on Scroll Logic
-        let lastScrollY = window.scrollY;
-        const stickyWrapper = document.getElementById('stickyWrapper');
+    // Dynamic Header Hide/Show on Scroll Logic (Fixed Bottom Flickering)
+    let lastScrollY = window.scrollY;
+    const stickyWrapper = document.getElementById('stickyWrapper');
 
-        window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
 
-            // Scroll Down -> Hide Header Logo Bar (Keep Search & Category Sticky)
-            if (currentScrollY > lastScrollY && currentScrollY > 60) {
-                stickyWrapper.classList.add('hide-header');
-            } 
-            // Scroll Up Even Slightly -> Instantly Show Header Logo Bar
-            else if (currentScrollY < lastScrollY) {
-                stickyWrapper.classList.remove('hide-header');
-            }
+        // Page ke ekdam bottom pahunchne par trigger na ho (Flicker Guard)
+        const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 20);
 
-            lastScrollY = currentScrollY;
-        });
-    </script>
+        // Niche scroll karne par YA page ke ekdam bottom par rehne par header HIDE rahega
+        if ((currentScrollY > lastScrollY && currentScrollY > 60) || isAtBottom) {
+            stickyWrapper.classList.add('hide-header');
+        } 
+        // Upar scroll karne par HI show hoga (jab tak bottom par na ho)
+        else if (currentScrollY < lastScrollY && !isAtBottom) {
+            stickyWrapper.classList.remove('hide-header');
+        }
+
+        lastScrollY = currentScrollY;
+    });
+</script>
 </body>
 </html>
