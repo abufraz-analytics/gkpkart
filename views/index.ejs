@@ -28,32 +28,51 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.5;
+            padding-top: 0; /* Handled via Javascript/Sticky Header */
+        }
+
+        /* Top Fixed Sticky Container */
+        .sticky-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease-in-out;
         }
 
         /* Header Styles */
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 16px 24px;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            transition: transform 0.3s ease, height 0.3s ease, padding 0.3s ease;
+            overflow: hidden;
+            height: 60px;
+        }
+
+        /* Class to Hide Header smoothly on Downward Scroll */
+        .sticky-wrapper.hide-header header {
+            height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            transform: translateY(-100%);
         }
 
         .logo-area {
-            font-size: 26px;
+            font-size: 20px;
             font-weight: 800;
             cursor: pointer;
             user-select: none;
             letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: transform 0.2s ease;
+            gap: 6px;
+            white-space: nowrap;
         }
 
         .logo-area:active {
@@ -62,46 +81,39 @@
 
         .nav-links {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         .view-order-btn {
             background: var(--success);
             color: white;
-            padding: 10px 18px;
+            padding: 8px 12px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 14px;
-            border-radius: 8px;
-            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            font-size: 13px;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: background 0.2s;
             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
         }
 
         .view-order-btn:hover {
             background: #059669;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
         }
 
         .hidden-btn {
             display: none;
             background: var(--accent);
             color: #111827;
-            padding: 10px 16px;
+            padding: 8px 10px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 14px;
-            border-radius: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
             animation: fadeIn 0.3s ease-in-out;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
-            transition: background 0.2s, transform 0.2s;
-        }
-
-        .hidden-btn:hover {
-            background: #d97706;
-            transform: translateY(-1px);
         }
 
         @keyframes fadeIn {
@@ -111,96 +123,84 @@
 
         /* Search Section */
         .search-container {
-            margin: 28px auto 16px;
-            text-align: center;
-            padding: 0 16px;
+            padding: 8px 12px;
+            background: var(--bg-color);
         }
 
         .search-container form {
-            display: inline-flex;
+            display: flex;
             width: 100%;
-            max-width: 550px;
+            max-width: 600px;
+            margin: auto;
             background: white;
             border-radius: 50px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
             overflow: hidden;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .search-container form:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
         }
 
         .search-container input {
             flex: 1;
-            padding: 14px 20px;
+            padding: 10px 16px;
             border: none;
             outline: none;
-            font-size: 15px;
+            font-size: 14px;
             color: var(--text-main);
             background: transparent;
         }
 
         .search-container button {
-            padding: 0 24px;
+            padding: 0 16px;
             background: var(--accent);
             color: #111827;
             border: none;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 13px;
             cursor: pointer;
-            transition: background 0.2s;
         }
 
-        .search-container button:hover {
-            background: #d97706;
-            color: white;
-        }
-
-        /* Category Filter Pills */
+        /* Tight Category Filter Pills */
         .category-filter {
             display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 20px auto 30px;
-            padding: 0 16px;
-            max-width: 1000px;
+            justify-content: flex-start;
+            gap: 6px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 4px 12px 8px;
+            max-width: 1200px;
+            margin: auto;
+            background: var(--bg-color);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-filter::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for clean UI */
         }
 
         .category-filter a {
-            padding: 8px 18px;
+            padding: 5px 12px;
             background: white;
             color: var(--text-muted);
             text-decoration: none;
-            border-radius: 30px;
-            font-size: 14px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 600;
             border: 1px solid var(--border-color);
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-        }
-
-        .category-filter a:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+            flex-shrink: 0;
         }
 
         .category-filter a.active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
         }
 
         /* Products Display Grid */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 24px;
-            padding: 0 20px 40px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+            padding: 12px 16px 40px;
             max-width: 1200px;
             margin: auto;
         }
@@ -208,29 +208,28 @@
         .product-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 10px;
+            padding: 12px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease;
         }
 
         .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 0 0 12px rgba(37, 99, 235, 0.15); /* Glow & Elevation */
+            transform: translateY(-3px);
             border-color: rgba(37, 99, 235, 0.3);
         }
 
         .image-wrapper {
             width: 100%;
-            height: 200px;
+            height: 180px;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 6px;
             background: #f1f5f9;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -240,133 +239,115 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 8px;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .product-card:hover img {
-            transform: scale(1.08); /* Smooth Zoom Effect */
         }
 
         .product-card h3 {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
-            margin: 8px 0;
+            margin: 6px 0;
             color: var(--text-main);
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
-            height: 44px;
+            height: 38px;
         }
 
         .product-card p {
             color: #e11d48;
             font-weight: 700;
-            font-size: 18px;
-            margin-bottom: 12px;
+            font-size: 16px;
+            margin-bottom: 8px;
         }
 
         .buy-btn {
             display: block;
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             background: var(--accent);
             color: #111827;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 700;
-            font-size: 14px;
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .buy-btn:hover {
-            background: #d97706;
-            color: white;
+            font-size: 13px;
         }
 
         .no-products {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
             color: var(--text-muted);
-            font-size: 16px;
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px dashed var(--border-color);
         }
 
-        /* Responsive Mobile Adjustments */
+        /* Mobile Adjustments */
         @media (max-width: 768px) {
             header {
-                padding: 12px 16px;
-                flex-direction: column;
-                gap: 12px;
+                padding: 10px 12px;
+                height: 52px;
             }
-            .nav-links {
-                width: 100%;
-                justify-content: center;
-            }
-            .search-container {
-                margin: 16px auto;
+            .logo-area {
+                font-size: 18px;
             }
             .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 12px;
-                padding: 0 12px 30px;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+                padding: 10px 8px 30px;
             }
             .product-card {
-                padding: 10px;
+                padding: 8px;
             }
             .image-wrapper {
-                height: 150px;
+                height: 140px;
             }
             .product-card h3 {
-                font-size: 14px;
-                height: 38px;
+                font-size: 13px;
+                height: 36px;
             }
             .product-card p {
-                font-size: 16px;
+                font-size: 15px;
             }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <!-- Logo with 4-click trigger for Admin & Delivery Logins -->
-        <div class="logo-area" id="logoClick">🛒 GkpKart</div>
+    <!-- Sticky Header Wrapper -->
+    <div class="sticky-wrapper" id="stickyWrapper">
+        <header>
+            <!-- Logo Left Side -->
+            <div class="logo-area" id="logoClick">🛒 GkpKart</div>
 
-        <div class="nav-links">
-            <!-- View Your Order (Always Visible, Local Tracking) -->
-            <a href="/view-orders" class="view-order-btn">View Your Order</a>
+            <!-- Buttons Right Side -->
+            <div class="nav-links">
+                <a href="/view-orders" class="view-order-btn">View Order</a>
+                <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Delivery</a>
+                <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Admin</a>
+            </div>
+        </header>
 
-            <!-- Hidden Login Buttons (Revealed after 4 clicks on Logo) -->
-            <a href="/delivery/login" id="deliveryLoginBtn" class="hidden-btn">Login Delivery</a>
-            <a href="/admin/login" id="adminLoginBtn" class="hidden-btn">Login Admin</a>
+        <!-- Search Bar -->
+        <div class="search-container">
+            <form action="/" method="GET">
+                <input type="text" name="search" placeholder="Search products..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                <button type="submit">Search</button>
+            </form>
         </div>
-    </header>
 
-    <!-- Search Section -->
-    <div class="search-container">
-        <form action="/" method="GET">
-            <input type="text" name="search" placeholder="Search for mobiles, electronics, shoes..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
-            <button type="submit">Search</button>
-        </form>
+        <!-- Tight Category Pills -->
+        <div class="category-filter">
+            <a href="/" class="<%= !selectedCategory ? 'active' : '' %>">All</a>
+            <a href="/?category=Shoes" class="<%= selectedCategory === 'Shoes' ? 'active' : '' %>">Shoes</a>
+            <a href="/?category=Mobile Accessories" class="<%= selectedCategory === 'Mobile Accessories' ? 'active' : '' %>">Mobile</a>
+            <a href="/?category=Small Electric Item" class="<%= selectedCategory === 'Small Electric Item' ? 'active' : '' %>">Small Electric</a>
+            <a href="/?category=Big Electric Item" class="<%= selectedCategory === 'Big Electric Item' ? 'active' : '' %>">Big Electric</a>
+            <a href="/?category=Ladies & Gents Makeup Items" class="<%= selectedCategory === 'Ladies & Gents Makeup Items' ? 'active' : '' %>">Makeup</a>
+        </div>
     </div>
 
-    <!-- Category Filter Pills -->
-    <div class="category-filter">
-        <a href="/" class="<%= !selectedCategory ? 'active' : '' %>">All Products</a>
-        <a href="/?category=Shoes" class="<%= selectedCategory === 'Shoes' ? 'active' : '' %>">Shoes</a>
-        <a href="/?category=Mobile Accessories" class="<%= selectedCategory === 'Mobile Accessories' ? 'active' : '' %>">Mobile Accessories</a>
-        <a href="/?category=Small Electric Item" class="<%= selectedCategory === 'Small Electric Item' ? 'active' : '' %>">Small Electric Item</a>
-        <a href="/?category=Big Electric Item" class="<%= selectedCategory === 'Big Electric Item' ? 'active' : '' %>">Big Electric Item</a>
-        <a href="/?category=Ladies & Gents Makeup Items" class="<%= selectedCategory === 'Ladies & Gents Makeup Items' ? 'active' : '' %>">Makeup Items</a>
-    </div>
-
-    <!-- Products Display Grid -->
+    <!-- Products Grid -->
     <div class="products-grid">
         <% if (products && products.length > 0) { %>
             <% products.forEach(product => { %>
@@ -380,7 +361,7 @@
                     </div>
                     <h3><%= product.title %></h3>
                     <p>₹<%= product.price %></p>
-                    <a href="/product/<%= product._id %>" class="buy-btn">View Details & Buy</a>
+                    <a href="/product/<%= product._id %>" class="buy-btn">View & Buy</a>
                 </div>
             <% }) %>
         <% } else { %>
@@ -391,7 +372,7 @@
     </div>
 
     <script>
-        // 4-Clicks Logic on Logo to reveal Login Buttons (Works on both Mobile & Desktop)
+        // 4-Clicks Logic on Logo to reveal Login Buttons
         let clickCount = 0;
         const logo = document.getElementById('logoClick');
         const adminBtn = document.getElementById('adminLoginBtn');
@@ -405,6 +386,25 @@
                 alert('Admin & Delivery Login unlocked!');
                 clickCount = 0;
             }
+        });
+
+        // Dynamic Header Hide/Show on Scroll Logic
+        let lastScrollY = window.scrollY;
+        const stickyWrapper = document.getElementById('stickyWrapper');
+
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+
+            // Scroll Down -> Hide Header Logo Bar (Keep Search & Category Sticky)
+            if (currentScrollY > lastScrollY && currentScrollY > 60) {
+                stickyWrapper.classList.add('hide-header');
+            } 
+            // Scroll Up Even Slightly -> Instantly Show Header Logo Bar
+            else if (currentScrollY < lastScrollY) {
+                stickyWrapper.classList.remove('hide-header');
+            }
+
+            lastScrollY = currentScrollY;
         });
     </script>
 </body>
