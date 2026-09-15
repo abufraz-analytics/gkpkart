@@ -35,7 +35,6 @@
             padding-bottom: 40px;
         }
 
-        /* Top Header */
         header {
             background: #1e293b;
             color: white;
@@ -52,7 +51,6 @@
         header h2 {
             font-size: 20px;
             font-weight: 700;
-            letter-spacing: 0.5px;
         }
 
         .header-actions {
@@ -81,42 +79,21 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        .btn-light:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
         .btn-danger {
             background-color: var(--danger);
             color: white;
         }
 
-        .btn-danger:hover {
-            background-color: var(--danger-dark);
-        }
-
         .btn-success {
             background-color: var(--success);
             color: white;
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
-        }
-
-        .btn-success:hover {
-            background-color: var(--success-dark);
-            transform: translateY(-1px);
         }
 
         .btn-primary-custom {
             background-color: var(--primary);
             color: white;
-            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
         }
 
-        .btn-primary-custom:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
-        /* Main Container Layout */
         .container {
             max-width: 1100px;
             margin: 30px auto;
@@ -145,7 +122,6 @@
             margin-bottom: 24px;
         }
 
-        /* Category Grid */
         .category-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -162,7 +138,6 @@
             font-weight: 600;
             font-size: 15px;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -171,22 +146,17 @@
 
         .category-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
             background: linear-gradient(135deg, #1d4ed8, #1e40af);
         }
 
-        /* Special Highlight Card for Multi-Item Orders */
         .category-card.special-multi {
             background: linear-gradient(135deg, #f59e0b, #d97706);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
         }
 
         .category-card.special-multi:hover {
             background: linear-gradient(135deg, #d97706, #b45309);
-            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.25);
         }
 
-        /* Quick Action Section */
         .action-flex {
             display: flex;
             gap: 16px;
@@ -216,16 +186,6 @@
             color: var(--text-muted);
             margin-bottom: 20px;
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            header { padding: 12px 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
-            .header-actions { width: 100%; justify-content: space-between; }
-            .container { margin: 16px auto; padding: 0 12px; }
-            .dashboard-card { padding: 20px; }
-            .category-grid { grid-template-columns: 1fr; }
-            .action-flex { flex-direction: column; }
-        }
     </style>
 </head>
 <body>
@@ -239,41 +199,35 @@
     </header>
 
     <div class="container">
-        
-        <!-- Categories Management Section -->
         <div class="dashboard-card">
             <h3>📂 Categories & Order Management</h3>
-            <p>Click on any category below to view its specific 5-stage order management table and product list:</p>
+            <p>Click on any category below to view its specific 5-stage order management table:</p>
 
             <div class="category-grid">
-                <!-- Single Item Category Routes -->
                 <a href="/admin/category/Shoes" class="category-card">👟 Shoes</a>
                 <a href="/admin/category/Mobile Accessories" class="category-card">📱 Mobile Accessories</a>
                 <a href="/admin/category/Small Electric Item" class="category-card">🔌 Small Electric Item</a>
                 <a href="/admin/category/Big Electric Item" class="category-card">📺 Big Electric Item</a>
                 <a href="/admin/category/Ladies & Gents Makeup Items" class="category-card">💄 Makeup Items</a>
                 
-                <!-- New Multi-Item Orders Route -->
+                <!-- ✅ Dedicated Cart Orders Table Route -->
                 <a href="/admin/orders/multi-item" class="category-card special-multi">📦 Multi-Item Orders (Cart)</a>
             </div>
         </div>
 
-        <!-- Product Management & Quick Actions -->
         <div class="dashboard-card" style="margin-bottom: 0;">
             <h3>📦 Product Management</h3>
-            <p>Add fresh products or manage/edit existing product listings and details.</p>
+            <p>Add fresh products or manage/edit existing product listings.</p>
 
             <div class="action-flex">
-                <!-- Add Product Box -->
                 <div class="action-box">
                     <div>
                         <h4>Add New Product</h4>
-                        <p>Upload a new product with multiple images, videos, pricing, and category selection.</p>
+                        <p>Upload a new product with images, pricing, and category selection.</p>
                     </div>
                     <a href="/admin/add-product" class="btn btn-success" style="width: 100%; justify-content: center;">➕ Add New Product</a>
                 </div>
 
-                <!-- Edit / Manage Products Box -->
                 <div class="action-box">
                     <div>
                         <h4>Edit & Manage Products</h4>
@@ -283,7 +237,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
 </body>
